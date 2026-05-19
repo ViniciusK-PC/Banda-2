@@ -49,7 +49,7 @@ export default function LoginPage() {
         localStorage.setItem('banda_user', JSON.stringify(data.user))
         
         toast.success(`Bem-vindo, ${data.user.name}!`)
-        if (data.user.role === 'ADMIN') {
+        if (data.user.role?.toUpperCase() === 'ADMIN') {
           router.push('/admin')
         } else {
           router.push('/dashboard')

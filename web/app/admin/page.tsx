@@ -118,7 +118,7 @@ export default function AdminPage() {
         router.push('/login')
       } else {
         const parsedUser = JSON.parse(storedUser)
-        if (parsedUser.role !== 'ADMIN') {
+        if (parsedUser.role?.toUpperCase() !== 'ADMIN') {
           toast.error('Acesso restrito a administradores.')
           router.push('/dashboard')
         } else {
