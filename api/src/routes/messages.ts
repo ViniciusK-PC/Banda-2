@@ -1,6 +1,9 @@
 import { Router } from 'express';
+import jwt from 'jsonwebtoken';
 import { Message } from '../models';
 import { authenticateToken, isAdmin } from '../middleware/auth';
+
+const JWT_SECRET = process.env.JWT_SECRET || 'super_secret_jwt_key_for_banda_api';
 
 const router = Router();
 
@@ -81,6 +84,75 @@ router.delete('/:id', authenticateToken, isAdmin, async (req: any, res: any) => 
     res.json({ message: 'Mensagem excluída com sucesso' });
   } catch (error: any) {
     res.status(500).json({ message: 'Erro ao excluir mensagem', error: error.message });
+  }
+});
+
+// GET /api/messages/:id - Get single ticket details with replies (Public)
+router.get('/:id', async (req: any, res: any) => {
+  try {
+    const { id } = req.params;
+    const message = await Message.findById(id);
+
+    if (!message) {
+      return res.status(404).json({ message: 'Ticket não encontrado' });
+    }
+
+    res.json(message);
+  } catch (error: any) {
+    res.status(500).json({ message: 'Erro ao buscar ticket', error: error.message });
+  }
+});
+
+// POST /api/messages/:id/replies - Add a reply (soft authenticated, Admin or User)
+router.post('/:id/replies', async (req: any, res: any) => {
+  try {
+    const { id } = req.params;
+    const { message: replyMessage } = req.body;
+
+    if (!replyMessage || replyMessage.trim() === '') {
+      return res.status(400).json({ message: 'Conteúdo da resposta é obrigatório' });
+    }
+
+    // Soft authenticate token
+    let sender: 'admin' | 'user' = 'user';
+    const authHeader = req.headers['authorization'];
+    const token = authHeader && authHeader.split(' ')[1];
+
+    if (token) {
+      try {
+        const decoded: any = jwt.verify(token, JWT_SECRET);
+        if (decoded && decoded.role === 'admin') {
+          sender = 'admin';
+        }
+      } catch (err) {
+        // Token invalid, ignore and treat as standard user
+      }
+    }
+
+    const ticket = await Message.findById(id);
+    if (!ticket) {
+      return res.status(404).json({ message: 'Ticket não encontrado' });
+    }
+
+    // Add reply
+    ticket.replies.push({
+      sender,
+      message: replyMessage.trim(),
+      createdAt: new Date(),
+    });
+
+    // Mark as read if admin replied, otherwise mark unread (waiting for admin attention)
+    ticket.read = (sender === 'admin');
+
+    await ticket.save();
+
+    res.status(201).json({
+      message: 'Resposta adicionada com sucesso!',
+      reply: ticket.replies[ticket.replies.length - 1],
+      ticket,
+    });
+  } catch (error: any) {
+    res.status(500).json({ message: 'Erro ao enviar resposta', error: error.message });
   }
 });
 

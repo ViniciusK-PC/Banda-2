@@ -1,5 +1,6 @@
 import { useState } from 'react'
-import { Mail, Phone, MapPin, Send, Instagram, Youtube, Facebook, Music, Loader2 } from 'lucide-react'
+import Link from 'next/link'
+import { Mail, Phone, MapPin, Send, Instagram, Youtube, Facebook, Music, Loader2, MessageSquare, X } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Settings, apiMessages } from '@/lib/api'
@@ -17,6 +18,7 @@ export function ContactSection({ settings }: ContactSectionProps) {
     message: ''
   })
   const [sending, setSending] = useState(false)
+  const [ticketId, setTicketId] = useState<string | null>(null)
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -27,8 +29,11 @@ export function ContactSection({ settings }: ContactSectionProps) {
 
     try {
       setSending(true)
-      await apiMessages.send(formData)
-      toast.success('Sua mensagem foi enviada com sucesso! Responderemos em breve.')
+      const res = await apiMessages.send(formData)
+      toast.success('Sua mensagem foi enviada com sucesso! Você pode acompanhar e conversar conosco pelo chat.')
+      if (res && res.data && res.data._id) {
+        setTicketId(res.data._id)
+      }
       setFormData({
         name: '',
         email: '',
@@ -233,6 +238,48 @@ export function ContactSection({ settings }: ContactSectionProps) {
           </div>
         </div>
       </div>
+
+      {/* Floating Ticket Success Modal */}
+      {ticketId && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/75 backdrop-blur-md">
+          <div className="relative w-full max-w-md bg-card/95 border border-border/80 p-8 rounded-3xl shadow-2xl text-center overflow-hidden">
+            {/* Background decorative element */}
+            <div className="absolute -top-12 -right-12 w-32 h-32 bg-primary/10 rounded-full blur-2xl pointer-events-none" />
+            
+            <button 
+              onClick={() => setTicketId(null)}
+              className="absolute top-4 right-4 text-muted-foreground hover:text-foreground cursor-pointer"
+            >
+              <X className="w-5 h-5" />
+            </button>
+
+            <div className="mx-auto w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center text-primary mb-6 animate-bounce">
+              <MessageSquare className="w-8 h-8" />
+            </div>
+
+            <h3 className="font-serif text-2xl font-bold mb-3">Mensagem Recebida!</h3>
+            <p className="text-muted-foreground text-sm mb-6 leading-relaxed">
+              Obrigado! Sua mensagem foi enviada. Criamos um canal de chat exclusivo para falarmos diretamente pelo site.
+            </p>
+
+            <div className="space-y-3">
+              <Link 
+                href={`/contato/ticket/${ticketId}`}
+                className="w-full flex items-center justify-center gap-2 bg-primary hover:bg-primary/90 text-primary-foreground font-semibold px-6 py-3 rounded-xl transition-all cursor-pointer shadow-lg shadow-primary/20"
+              >
+                <MessageSquare className="w-4 h-4" />
+                Abrir Chat de Contato
+              </Link>
+              <button 
+                onClick={() => setTicketId(null)}
+                className="w-full text-xs text-muted-foreground hover:text-foreground transition-all cursor-pointer py-2"
+              >
+                Voltar ao site
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </section>
   )
 }

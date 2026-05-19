@@ -7,7 +7,7 @@ import {
   Calendar, Camera, LogOut, Plus, Edit2, Trash2, Globe, Music, Disc3,
   MapPin, Clock, Ticket, Loader2, ArrowLeft, Image as ImageIcon, Video, Link as LinkIcon,
   Settings as SettingsIcon, Save, CheckSquare, Square, X as XIcon, GripVertical, Upload,
-  Mail, Check, Inbox, Eye, Reply
+  Mail, Check, Inbox, Eye, Reply, Send, MessageSquare
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { apiShows, apiMedia, apiSettings, apiAlbums, apiUpload, apiMessages, resolveMediaUrl, Show, Media, Settings, Album, Track, Message } from '@/lib/api'
@@ -36,6 +36,8 @@ export default function AdminPage() {
   const [albums, setAlbums] = useState<Album[]>([])
   const [messages, setMessages] = useState<Message[]>([])
   const [expandedMessageId, setExpandedMessageId] = useState<string | null>(null)
+  const [adminReplyTexts, setAdminReplyTexts] = useState<Record<string, string>>({})
+  const [adminReplyingIds, setAdminReplyingIds] = useState<Record<string, boolean>>({})
 
   // Bulk selection states
   const [selectedMedia, setSelectedMedia] = useState<Set<string>>(new Set())
@@ -353,6 +355,23 @@ export default function AdminPage() {
       fetchMessages()
     } catch (err: any) {
       toast.error('Erro ao excluir mensagem.')
+    }
+  }
+
+  const handleSendAdminReply = async (messageId: string) => {
+    const text = adminReplyTexts[messageId] || ''
+    if (!text.trim()) return
+
+    try {
+      setAdminReplyingIds(prev => ({ ...prev, [messageId]: true }))
+      await apiMessages.reply(messageId, text)
+      toast.success('Resposta enviada com sucesso pelo chat!')
+      setAdminReplyTexts(prev => ({ ...prev, [messageId]: '' }))
+      fetchMessages()
+    } catch (err: any) {
+      toast.error('Erro ao enviar resposta.')
+    } finally {
+      setAdminReplyingIds(prev => ({ ...prev, [messageId]: false }))
     }
   }
 
@@ -1622,19 +1641,110 @@ export default function AdminPage() {
                           </div>
                         </div>
 
-                        {/* Expandable Body */}
+                        {/* Expandable Body: Live Support Chat Interface */}
                         {isExpanded && (
                           <div className="px-5 pb-5 pt-1 border-t border-border/40 space-y-4">
-                            <div className="bg-secondary/30 border border-border/50 rounded-xl p-4 text-sm leading-relaxed text-foreground whitespace-pre-wrap font-sans">
-                              {message.message}
+                            {/* Chat Thread Container */}
+                            <div className="border border-border/60 bg-secondary/15 rounded-2xl p-4 space-y-4 max-h-[350px] overflow-y-auto">
+                              <span className="text-[10px] uppercase tracking-wider text-primary font-bold block pb-1 border-b border-border/20">
+                                Conversa Direta com o Usuário
+                              </span>
+
+                              {/* 1. Original User Message */}
+                              <div className="flex items-start gap-2.5 max-w-[85%]">
+                                <div className="w-7 h-7 rounded-full bg-secondary/80 flex items-center justify-center text-xs font-semibold text-primary uppercase shrink-0 border border-border/50">
+                                  {message.name.charAt(0)}
+                                </div>
+                                <div className="flex flex-col">
+                                  <div className="bg-secondary/40 border border-border/50 text-foreground text-sm px-3.5 py-2 rounded-2xl rounded-tl-none font-sans">
+                                    {message.message}
+                                  </div>
+                                  <span className="text-[9px] text-muted-foreground mt-1">
+                                    {message.name} • {formatTimeString(message.createdAt)}
+                                  </span>
+                                </div>
+                              </div>
+
+                              {/* 2. Additional replies */}
+                              {message.replies && message.replies.map((reply, idx) => {
+                                const isAdmin = reply.sender === 'admin';
+                                return (
+                                  <div 
+                                    key={reply._id || idx}
+                                    className={`flex items-start gap-2.5 max-w-[85%] ${isAdmin ? 'ml-auto justify-end' : ''}`}
+                                  >
+                                    {!isAdmin && (
+                                      <div className="w-7 h-7 rounded-full bg-secondary/80 flex items-center justify-center text-xs font-semibold text-primary uppercase shrink-0 border border-border/50">
+                                        {message.name.charAt(0)}
+                                      </div>
+                                    )}
+
+                                    <div className={`flex flex-col ${isAdmin ? 'items-end' : ''}`}>
+                                      <div className={`text-sm px-3.5 py-2 rounded-2xl font-sans ${
+                                        isAdmin 
+                                          ? 'bg-primary text-primary-foreground rounded-tr-none shadow-sm' 
+                                          : 'bg-secondary/40 border border-border/50 text-foreground rounded-tl-none'
+                                      }`}>
+                                        {reply.message}
+                                      </div>
+                                      <span className="text-[9px] text-muted-foreground mt-1">
+                                        {isAdmin ? 'Você (Admin)' : message.name} • {formatTimeString(reply.createdAt)}
+                                      </span>
+                                    </div>
+
+                                    {isAdmin && (
+                                      <div className="w-7 h-7 rounded-full bg-primary/20 flex items-center justify-center text-xs font-bold text-primary shrink-0 border border-primary/30">
+                                        AD
+                                      </div>
+                                    )}
+                                  </div>
+                                );
+                              })}
                             </div>
 
-                            <div className="flex flex-wrap items-center justify-between gap-3 pt-2">
-                              {/* Reply / Mark Actions */}
+                            {/* Chat Reply Area */}
+                            <div className="flex items-center gap-2 pt-1">
+                              <input
+                                type="text"
+                                placeholder="Digite sua resposta e aperte Enter para enviar pelo chat..."
+                                value={adminReplyTexts[message._id] || ''}
+                                onChange={(e) => setAdminReplyTexts({ ...adminReplyTexts, [message._id]: e.target.value })}
+                                onKeyDown={(e) => {
+                                  if (e.key === 'Enter') handleSendAdminReply(message._id);
+                                }}
+                                disabled={adminReplyingIds[message._id]}
+                                className="flex-1 bg-secondary/45 border border-border/60 rounded-xl px-4 py-2.5 text-xs focus:outline-none focus:ring-1 focus:ring-primary text-foreground placeholder:text-muted-foreground"
+                              />
+                              <button
+                                onClick={() => handleSendAdminReply(message._id)}
+                                disabled={adminReplyingIds[message._id] || !(adminReplyTexts[message._id] || '').trim()}
+                                className="bg-primary hover:bg-primary/95 text-primary-foreground font-semibold px-4 py-2.5 rounded-xl text-xs flex items-center gap-1.5 cursor-pointer disabled:opacity-50 shrink-0"
+                              >
+                                {adminReplyingIds[message._id] ? (
+                                  <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                                ) : (
+                                  <Send className="w-3.5 h-3.5" />
+                                )}
+                                Responder Chat
+                              </button>
+                            </div>
+
+                            {/* Actions strip */}
+                            <div className="flex flex-wrap items-center justify-between gap-3 pt-3 border-t border-border/30">
+                              {/* External ticket link & email */}
                               <div className="flex flex-wrap items-center gap-2">
+                                <Link 
+                                  href={`/contato/ticket/${message._id}`}
+                                  target="_blank"
+                                  className="flex items-center gap-1.5 text-xs font-semibold text-foreground bg-secondary/80 hover:bg-secondary border border-border/60 px-4 py-2 rounded-xl transition-all"
+                                >
+                                  <MessageSquare className="w-3.5 h-3.5 text-primary" />
+                                  Visualizar Ticket de Chat
+                                </Link>
+
                                 <a 
                                   href={`mailto:${message.email}?subject=Re: ${encodeURIComponent(message.subject)}`}
-                                  className="flex items-center gap-1.5 text-xs font-semibold text-primary-foreground bg-primary hover:bg-primary/90 transition-all cursor-pointer px-4 py-2 rounded-xl"
+                                  className="flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground transition-all cursor-pointer px-4 py-2 rounded-xl bg-secondary/40 border border-border/50"
                                 >
                                   <Reply className="w-3.5 h-3.5" />
                                   Responder por E-mail
@@ -1642,7 +1752,7 @@ export default function AdminPage() {
 
                                 <button
                                   onClick={() => handleToggleMessageRead(message._id, !message.read)}
-                                  className="flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground transition-all cursor-pointer px-3.5 py-2 rounded-xl bg-secondary/85 hover:bg-secondary border border-border/50"
+                                  className="flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground transition-all cursor-pointer px-3.5 py-2 rounded-xl bg-secondary/40 border border-border/50"
                                 >
                                   {message.read ? (
                                     <>
@@ -1664,7 +1774,7 @@ export default function AdminPage() {
                                 className="flex items-center gap-1.5 text-xs text-rose-400 hover:text-rose-300 hover:bg-rose-500/10 transition-all cursor-pointer px-3.5 py-2 rounded-xl bg-secondary/60 border border-rose-500/20"
                               >
                                 <Trash2 className="w-3.5 h-3.5" />
-                                Excluir Permanentemente
+                                Excluir Registro
                               </button>
                             </div>
                           </div>

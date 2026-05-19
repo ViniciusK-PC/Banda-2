@@ -369,6 +369,13 @@ export const apiAlbums = {
 
 // --- MESSAGE / INBOX TYPES & ENDPOINTS ---
 
+export interface Reply {
+  _id?: string;
+  sender: 'user' | 'admin';
+  message: string;
+  createdAt: string;
+}
+
 export interface Message {
   _id: string;
   name: string;
@@ -376,11 +383,12 @@ export interface Message {
   subject: string;
   message: string;
   read: boolean;
+  replies?: Reply[];
   createdAt: string;
 }
 
 export const apiMessages = {
-  send: async (messageData: Omit<Message, '_id' | 'read' | 'createdAt'>): Promise<{ message: string }> => {
+  send: async (messageData: Omit<Message, '_id' | 'read' | 'createdAt' | 'replies'>): Promise<{ message: string; data: Message }> => {
     const res = await fetch(`${getBaseUrl()}/api/messages`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -400,6 +408,14 @@ export const apiMessages = {
     return res.json();
   },
 
+  get: async (id: string): Promise<Message> => {
+    const res = await fetch(`${getBaseUrl()}/api/messages/${id}`, {
+      cache: 'no-store',
+    });
+    if (!res.ok) throw new Error('Erro ao buscar ticket');
+    return res.json();
+  },
+
   toggleRead: async (id: string, read: boolean): Promise<{ message: string; updatedMessage: Message }> => {
     const res = await fetch(`${getBaseUrl()}/api/messages/${id}/read`, {
       method: 'PATCH',
@@ -408,6 +424,17 @@ export const apiMessages = {
     });
     const data = await res.json();
     if (!res.ok) throw new Error(data.message || 'Erro ao atualizar status da mensagem');
+    return data;
+  },
+
+  reply: async (id: string, message: string): Promise<{ message: string; reply: Reply; ticket: Message }> => {
+    const res = await fetch(`${getBaseUrl()}/api/messages/${id}/replies`, {
+      method: 'POST',
+      headers: getHeaders(),
+      body: JSON.stringify({ message }),
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.message || 'Erro ao enviar resposta');
     return data;
   },
 
