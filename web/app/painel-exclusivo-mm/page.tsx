@@ -7,7 +7,7 @@ import {
   Calendar, Camera, LogOut, Plus, Edit2, Trash2, Globe, Music, Disc3,
   MapPin, Clock, Ticket, Loader2, ArrowLeft, Image as ImageIcon, Video, Link as LinkIcon,
   Settings as SettingsIcon, Save, CheckSquare, Square, X as XIcon, GripVertical, Upload,
-  Mail, Check, Inbox, Eye, Reply, Send, MessageSquare
+  Mail, Check, Inbox, Eye, Reply, Send, MessageSquare, User
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { apiShows, apiMedia, apiSettings, apiAlbums, apiUpload, apiMessages, resolveMediaUrl, Show, Media, Settings, Album, Track, Message } from '@/lib/api'
@@ -45,6 +45,7 @@ export default function AdminPage() {
   const [selectedAlbums, setSelectedAlbums] = useState<Set<string>>(new Set())
   const [selectedMessages, setSelectedMessages] = useState<Set<string>>(new Set())
   const [bulkDeleting, setBulkDeleting] = useState(false)
+  const [dropdownOpen, setDropdownOpen] = useState(false)
 
   // Clear selections when active tab changes
   useEffect(() => {
@@ -638,16 +639,59 @@ export default function AdminPage() {
               Ver Site
             </Link>
             <div className="h-4 w-px bg-border/80" />
-            <span className="text-xs text-muted-foreground">Olá, <strong className="text-foreground">{user?.name}</strong></span>
-            <Button 
-              onClick={handleLogout} 
-              variant="outline" 
-              size="sm" 
-              className="border-border hover:border-destructive hover:text-destructive text-xs cursor-pointer"
-            >
-              <LogOut className="w-3.5 h-3.5 mr-1" />
-              Sair
-            </Button>
+            
+            <div className="relative">
+              <button
+                onClick={() => setDropdownOpen(!dropdownOpen)}
+                className="flex items-center gap-2 text-xs font-semibold text-foreground hover:bg-secondary/40 border border-border/80 px-4 py-2.5 rounded-xl transition-all cursor-pointer select-none"
+              >
+                {user?.avatarUrl ? (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img 
+                    src={resolveMediaUrl(user.avatarUrl)} 
+                    alt="Avatar" 
+                    className="w-5 h-5 rounded-full object-cover border border-primary/45"
+                  />
+                ) : (
+                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                )}
+                Olá, {user?.name ? user.name.split(' ')[0] : 'Admin'} 👋
+              </button>
+
+              {dropdownOpen && (
+                <div className="absolute right-0 mt-2 w-48 bg-card/95 backdrop-blur-xl border border-border rounded-2xl p-2 shadow-2xl z-50 flex flex-col gap-1">
+                  <button
+                    onClick={() => {
+                      setDropdownOpen(false)
+                      // Simply stay on painel
+                    }}
+                    className="w-full text-left text-xs font-medium text-foreground hover:bg-primary/10 px-3 py-2 rounded-xl transition-all flex items-center gap-2 cursor-pointer border-0 bg-transparent"
+                  >
+                    <User className="w-4 h-4 text-primary" />
+                    Ver Perfil
+                  </button>
+                  <Link
+                    href="/dashboard/perfil"
+                    onClick={() => setDropdownOpen(false)}
+                    className="text-left text-xs font-medium text-foreground hover:bg-primary/10 px-3 py-2 rounded-xl transition-all flex items-center gap-2 cursor-pointer"
+                  >
+                    <Edit2 className="w-4 h-4 text-primary" />
+                    Editar Perfil
+                  </Link>
+                  <div className="h-px bg-border my-1" />
+                  <button
+                    onClick={() => {
+                      setDropdownOpen(false)
+                      handleLogout()
+                    }}
+                    className="w-full text-left text-xs font-medium text-rose-400 hover:bg-rose-500/10 px-3 py-2.5 rounded-xl transition-all flex items-center gap-2 cursor-pointer border-0 bg-transparent"
+                  >
+                    <LogOut className="w-4 h-4" />
+                    Sair
+                  </button>
+                </div>
+              )}
+            </div>
           </div>
         </div>
       </header>
