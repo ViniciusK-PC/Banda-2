@@ -408,6 +408,15 @@ export const apiMessages = {
     return res.json();
   },
 
+  getMyTickets: async (): Promise<Message[]> => {
+    const res = await fetch(`${getBaseUrl()}/api/messages/my-tickets`, {
+      headers: getHeaders(),
+      cache: 'no-store',
+    });
+    if (!res.ok) throw new Error('Erro ao buscar seus chamados');
+    return res.json();
+  },
+
   get: async (id: string): Promise<Message> => {
     const res = await fetch(`${getBaseUrl()}/api/messages/${id}`, {
       cache: 'no-store',

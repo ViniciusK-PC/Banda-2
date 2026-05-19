@@ -63,18 +63,24 @@ export function BandHeader({ settings }: BandHeaderProps) {
             ))}
           </div>
 
-          {/* Social Icons - Desktop */}
+          {/* Social Icons & Fan Area - Desktop */}
           <div className="hidden lg:flex items-center gap-4">
             {settings?.instagramUrl && (
-              <a href={settings.instagramUrl} target="_blank" rel="noopener noreferrer" className="text-muted-foreground hover:text-primary transition-colors" aria-label="Instagram">
+              <a href={settings.instagramUrl} target="_blank" rel="noopener noreferrer" className="text-muted-foreground hover:text-primary transition-colors hover:scale-105 transition-transform" aria-label="Instagram">
                 <Instagram className="w-5 h-5" />
               </a>
             )}
             {settings?.youtubeUrl && (
-              <a href={settings.youtubeUrl} target="_blank" rel="noopener noreferrer" className="text-muted-foreground hover:text-primary transition-colors" aria-label="YouTube">
+              <a href={settings.youtubeUrl} target="_blank" rel="noopener noreferrer" className="text-muted-foreground hover:text-primary transition-colors hover:scale-105 transition-transform" aria-label="YouTube">
                 <Youtube className="w-5 h-5" />
               </a>
             )}
+            <Link
+              href="/login"
+              className="text-xs font-semibold text-foreground bg-primary/10 hover:bg-primary/20 border border-primary/30 hover:border-primary/50 px-4 py-2 rounded-xl transition-all cursor-pointer shadow-md shadow-primary/5"
+            >
+              Área do Fã
+            </Link>
           </div>
 
           {/* Mobile Menu Button */}
@@ -105,17 +111,26 @@ export function BandHeader({ settings }: BandHeaderProps) {
                 </Link>
               ))}
             </div>
-            <div className="flex items-center gap-6 mt-6 pt-6 border-t border-border">
-              {settings?.instagramUrl && (
-                <a href={settings.instagramUrl} target="_blank" rel="noopener noreferrer" className="text-muted-foreground hover:text-primary transition-colors" aria-label="Instagram">
-                  <Instagram className="w-6 h-6" />
-                </a>
-              )}
-              {settings?.youtubeUrl && (
-                <a href={settings.youtubeUrl} target="_blank" rel="noopener noreferrer" className="text-muted-foreground hover:text-primary transition-colors" aria-label="YouTube">
-                  <Youtube className="w-6 h-6" />
-                </a>
-              )}
+            <div className="flex items-center justify-between gap-6 mt-6 pt-6 border-t border-border">
+              <div className="flex items-center gap-6">
+                {settings?.instagramUrl && (
+                  <a href={settings.instagramUrl} target="_blank" rel="noopener noreferrer" className="text-muted-foreground hover:text-primary transition-colors" aria-label="Instagram">
+                    <Instagram className="w-6 h-6" />
+                  </a>
+                )}
+                {settings?.youtubeUrl && (
+                  <a href={settings.youtubeUrl} target="_blank" rel="noopener noreferrer" className="text-muted-foreground hover:text-primary transition-colors" aria-label="YouTube">
+                    <Youtube className="w-6 h-6" />
+                  </a>
+                )}
+              </div>
+              <Link
+                href="/login"
+                onClick={() => setIsOpen(false)}
+                className="text-xs font-semibold text-foreground bg-primary/10 hover:bg-primary/20 border border-primary/30 hover:border-primary/50 px-5 py-2.5 rounded-xl transition-all cursor-pointer"
+              >
+                Área do Fã
+              </Link>
             </div>
           </div>
         </div>

@@ -1,6 +1,6 @@
 import { Router } from 'express';
 import jwt from 'jsonwebtoken';
-import { Message } from '../models';
+import { Message, User } from '../models';
 import { authenticateToken, isAdmin } from '../middleware/auth';
 
 const JWT_SECRET = process.env.JWT_SECRET || 'super_secret_jwt_key_for_banda_api';
@@ -87,6 +87,21 @@ router.delete('/:id', authenticateToken, isAdmin, async (req: any, res: any) => 
   }
 });
 
+// GET /api/messages/my-tickets - List tickets created by the logged-in user (Protected, any authenticated user)
+router.get('/my-tickets', authenticateToken, async (req: any, res: any) => {
+  try {
+    const user = await User.findById(req.user.id);
+    if (!user) {
+      return res.status(404).json({ message: 'Usuário não encontrado' });
+    }
+
+    const messages = await Message.find({ email: user.email }).sort({ createdAt: -1 });
+    res.json(messages);
+  } catch (error: any) {
+    res.status(500).json({ message: 'Erro ao buscar chamados', error: error.message });
+  }
+});
+
 // GET /api/messages/:id - Get single ticket details with replies (Public)
 router.get('/:id', async (req: any, res: any) => {
   try {
@@ -121,7 +136,7 @@ router.post('/:id/replies', async (req: any, res: any) => {
     if (token) {
       try {
         const decoded: any = jwt.verify(token, JWT_SECRET);
-        if (decoded && decoded.role === 'admin') {
+        if (decoded && (decoded.role === 'ADMIN' || decoded.role === 'admin')) {
           sender = 'admin';
         }
       } catch (err) {

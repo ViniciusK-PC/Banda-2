@@ -3,7 +3,7 @@
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
-import { Music, ArrowLeft, Loader2, Lock, Mail } from 'lucide-react'
+import { Music, ArrowLeft, Loader2, Lock, Mail, User } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { apiAuth } from '@/lib/api'
 import { toast } from 'sonner'
@@ -11,31 +11,55 @@ import { toast } from 'sonner'
 export default function LoginPage() {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
+  const [name, setName] = useState('')
+  const [isRegister, setIsRegister] = useState(false)
   const [loading, setLoading] = useState(false)
   const router = useRouter()
 
-  const handleLogin = async (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    if (!email || !password) {
-      toast.error('Preencha todos os campos.')
-      return
-    }
-
-    try {
-      setLoading(true)
-      const data = await apiAuth.login(email, password)
-      
-      // Save auth details
-      localStorage.setItem('banda_token', data.token)
-      localStorage.setItem('banda_user', JSON.stringify(data.user))
-      
-      toast.success(`Bem-vindo, ${data.user.name}!`)
-      router.push('/admin')
-    } catch (err: any) {
-      console.error(err)
-      toast.error(err.message || 'Credenciais inválidas. Tente novamente.')
-    } finally {
-      setLoading(false)
+    
+    if (isRegister) {
+      if (!name || !email || !password) {
+        toast.error('Preencha todos os campos.')
+        return
+      }
+      try {
+        setLoading(true)
+        const data = await apiAuth.register(name, email, password)
+        toast.success('Cadastro realizado com sucesso! Faça login.')
+        setIsRegister(false) // Toggle back to login
+      } catch (err: any) {
+        console.error(err)
+        toast.error(err.message || 'Erro ao realizar cadastro.')
+      } finally {
+        setLoading(false)
+      }
+    } else {
+      if (!email || !password) {
+        toast.error('Preencha todos os campos.')
+        return
+      }
+      try {
+        setLoading(true)
+        const data = await apiAuth.login(email, password)
+        
+        // Save auth details
+        localStorage.setItem('banda_token', data.token)
+        localStorage.setItem('banda_user', JSON.stringify(data.user))
+        
+        toast.success(`Bem-vindo, ${data.user.name}!`)
+        if (data.user.role === 'ADMIN') {
+          router.push('/admin')
+        } else {
+          router.push('/dashboard')
+        }
+      } catch (err: any) {
+        console.error(err)
+        toast.error(err.message || 'Credenciais inválidas. Tente novamente.')
+      } finally {
+        setLoading(false)
+      }
     }
   }
 
@@ -63,10 +87,30 @@ export default function LoginPage() {
             <Music className="w-6 h-6 text-primary" />
           </div>
           <h1 className="font-serif text-3xl font-bold tracking-tight">Mariana Maciel</h1>
-          <p className="text-sm text-muted-foreground mt-2">Área Administrativa do Site</p>
+          <p className="text-xs text-muted-foreground mt-2">
+            {isRegister ? 'Cadastre-se para acompanhar notícias e chats' : 'Faça login no painel administrativo ou área de fã'}
+          </p>
         </div>
 
-        <form onSubmit={handleLogin} className="space-y-5">
+        <form onSubmit={handleSubmit} className="space-y-5">
+          {/* Full Name (Only for Registration) */}
+          {isRegister && (
+            <div className="space-y-2">
+              <label className="text-sm font-medium text-muted-foreground flex items-center gap-1.5">
+                <User className="w-4 h-4" /> Nome Completo
+              </label>
+              <input
+                type="text"
+                placeholder="Seu nome completo"
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                disabled={loading}
+                className="w-full bg-secondary/35 border border-border/50 rounded-xl px-4 py-3 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-primary/50 focus:ring-1 focus:ring-primary/20 transition-all"
+                required
+              />
+            </div>
+          )}
+
           {/* Email */}
           <div className="space-y-2">
             <label className="text-sm font-medium text-muted-foreground flex items-center gap-1.5">
@@ -79,6 +123,7 @@ export default function LoginPage() {
               onChange={(e) => setEmail(e.target.value)}
               disabled={loading}
               className="w-full bg-secondary/35 border border-border/50 rounded-xl px-4 py-3 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-primary/50 focus:ring-1 focus:ring-primary/20 transition-all"
+              required
             />
           </div>
 
@@ -94,6 +139,7 @@ export default function LoginPage() {
               onChange={(e) => setPassword(e.target.value)}
               disabled={loading}
               className="w-full bg-secondary/35 border border-border/50 rounded-xl px-4 py-3 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-primary/50 focus:ring-1 focus:ring-primary/20 transition-all"
+              required
             />
           </div>
 
@@ -101,17 +147,33 @@ export default function LoginPage() {
           <Button
             type="submit"
             disabled={loading}
-            className="w-full bg-primary hover:bg-primary/90 text-primary-foreground py-6 rounded-xl font-medium shadow-lg hover:shadow-primary/20 transition-all mt-4"
+            className="w-full bg-primary hover:bg-primary/90 text-primary-foreground py-6 rounded-xl font-medium shadow-lg hover:shadow-primary/20 transition-all mt-4 cursor-pointer"
           >
             {loading ? (
               <>
                 <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                Autenticando...
+                Processando...
               </>
             ) : (
-              'Entrar no Painel'
+              isRegister ? 'Criar Conta de Fã' : 'Entrar no Sistema'
             )}
           </Button>
+
+          {/* Toggle between Register and Login */}
+          <div className="text-center mt-4">
+            <button
+              type="button"
+              onClick={() => {
+                setIsRegister(!isRegister)
+                setName('')
+                setEmail('')
+                setPassword('')
+              }}
+              className="text-xs text-primary hover:underline hover:text-primary/95 transition-all bg-transparent border-0 cursor-pointer"
+            >
+              {isRegister ? 'Já possui uma conta? Entre' : 'Não tem conta? Cadastre-se como Fã'}
+            </button>
+          </div>
         </form>
       </div>
     </main>
