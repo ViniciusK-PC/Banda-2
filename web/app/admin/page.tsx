@@ -117,8 +117,14 @@ export default function AdminPage() {
         toast.error('Acesso restrito. Faça login primeiro.')
         router.push('/login')
       } else {
-        setAuthorized(true)
-        setUser(JSON.parse(storedUser))
+        const parsedUser = JSON.parse(storedUser)
+        if (parsedUser.role !== 'ADMIN') {
+          toast.error('Acesso restrito a administradores.')
+          router.push('/dashboard')
+        } else {
+          setAuthorized(true)
+          setUser(parsedUser)
+        }
       }
     }
   }, [router])
