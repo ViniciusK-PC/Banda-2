@@ -8,7 +8,7 @@ import {
   Clock, Plus, CheckCircle2, Ticket, Award, Disc, Tag, Send, User as UserIcon, Edit, X
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
-import { apiMessages, apiShows, apiAlbums, apiAuth, Message, Show, Album } from '@/lib/api'
+import { apiMessages, apiShows, apiAlbums, apiAuth, resolveMediaUrl, Message, Show, Album } from '@/lib/api'
 import { toast } from 'sonner'
 
 export default function DashboardPage() {
@@ -178,9 +178,19 @@ export default function DashboardPage() {
           </div>
 
           <div className="flex items-center gap-4">
-            <div className="text-right hidden sm:block">
-              <p className="text-xs text-muted-foreground">Olá, Fã Oficial</p>
-              <p className="text-sm font-semibold text-foreground">{user.name}</p>
+            <div className="flex items-center gap-3">
+              {user.avatarUrl && (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img 
+                  src={resolveMediaUrl(user.avatarUrl)} 
+                  alt="Foto de perfil" 
+                  className="w-8 h-8 rounded-full object-cover border border-primary/40 shadow-sm"
+                />
+              )}
+              <div className="text-right hidden sm:block">
+                <p className="text-[10px] text-muted-foreground">Olá, Fã Oficial</p>
+                <p className="text-xs font-semibold text-foreground">{user.name}</p>
+              </div>
             </div>
             
             <button
@@ -200,12 +210,22 @@ export default function DashboardPage() {
         {/* Welcome Header Hero */}
         <section className="relative overflow-hidden bg-gradient-to-r from-card/30 to-violet-950/10 border border-border/60 p-8 rounded-3xl mb-8 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-6">
           <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-64 h-64 bg-primary/5 rounded-full blur-3xl pointer-events-none" />
-          <div>
-            <span className="text-xs uppercase tracking-wider text-primary font-bold">Fã Clube Mariana Maciel</span>
-            <h1 className="font-serif text-3xl sm:text-4xl font-bold mt-1 text-foreground">Olá, {user.name}!</h1>
-            <p className="text-muted-foreground text-sm mt-1.5 max-w-xl">
-              Aqui você tem acesso a vantagens exclusivas, promoções em primeira mão e um canal de chat direto para conversar conosco.
-            </p>
+          <div className="flex flex-col sm:flex-row items-center gap-5">
+            {user.avatarUrl && (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img 
+                src={resolveMediaUrl(user.avatarUrl)} 
+                alt="Foto de perfil" 
+                className="w-16 h-16 sm:w-20 sm:h-20 rounded-full object-cover border-2 border-primary/50 shadow-md shrink-0"
+              />
+            )}
+            <div>
+              <span className="text-xs uppercase tracking-wider text-primary font-bold">Fã Clube Mariana Maciel</span>
+              <h1 className="font-serif text-3xl sm:text-4xl font-bold mt-1 text-foreground">Olá, {user.name}!</h1>
+              <p className="text-muted-foreground text-sm mt-1.5 max-w-xl">
+                Aqui você tem acesso a vantagens exclusivas, promoções em primeira mão e um canal de chat direto para conversar conosco.
+              </p>
+            </div>
           </div>
           
           <Link 
