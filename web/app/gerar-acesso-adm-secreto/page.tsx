@@ -1,54 +1,45 @@
 "use client"
 
 import { useState } from 'react'
-import { ShieldAlert, Loader2, Key, User, Mail, Lock } from 'lucide-react'
+import { ShieldAlert, Loader2, Key, Link as LinkIcon } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { toast } from 'sonner'
 
 export default function AdminGeneratorPage() {
   const [masterKey, setMasterKey] = useState('banda_super_secret_master_key_2026')
-  const [name, setName] = useState('')
-  const [email, setEmail] = useState('')
-  const [password, setPassword] = useState('')
   const [loading, setLoading] = useState(false)
-  const [createdUser, setCreatedUser] = useState<any>(null)
+  const [inviteLink, setInviteLink] = useState('')
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
 
-    if (!name || !email || !password || !masterKey) {
-      toast.error('Preencha todos os campos.')
+    if (!masterKey) {
+      toast.error('Preencha a chave mestra.')
       return
     }
 
     try {
       setLoading(true)
-      setCreatedUser(null)
+      setInviteLink('')
 
-      // Use the relative path or base API URL
-      const response = await fetch('/express-api/api/auth/register-admin-master', {
+      const response = await fetch('/express-api/api/auth/generate-invite', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
         },
         body: JSON.stringify({
-          name,
-          email,
-          password,
           masterKey
         })
       })
 
       const data = await response.json()
 
-      if (response.ok) {
-        toast.success('Novo administrador criado com sucesso!')
-        setCreatedUser({ name, email, password })
-        setName('')
-        setEmail('')
-        setPassword('')
+      if (response.ok && data.token) {
+        toast.success('Link de convite gerado com sucesso!')
+        const baseUrl = window.location.origin
+        setInviteLink(`${baseUrl}/cadastro-admin-convite?token=${data.token}`)
       } else {
-        throw new Error(data.message || 'Erro ao gerar acesso administrativo.')
+        throw new Error(data.message || 'Erro ao gerar link de convite.')
       }
     } catch (err: any) {
       console.error(err)
@@ -70,9 +61,9 @@ export default function AdminGeneratorPage() {
           <div className="inline-flex items-center justify-center p-3 rounded-2xl bg-red-500/15 border border-red-500/30 mb-4 text-red-400">
             <ShieldAlert className="w-6 h-6" />
           </div>
-          <h1 className="font-serif text-2xl font-bold tracking-tight text-foreground">Gerador de Admin</h1>
+          <h1 className="font-serif text-2xl font-bold tracking-tight text-foreground">Gerador de Link de Convite</h1>
           <p className="text-xs text-muted-foreground mt-2">
-            Área de segurança para criação de novos perfis administrativos.
+            Gere um link temporário e de uso único para que outra pessoa cadastre suas credenciais de administrador.
           </p>
         </div>
 
@@ -93,54 +84,6 @@ export default function AdminGeneratorPage() {
             />
           </div>
 
-          {/* Name */}
-          <div className="space-y-1.5">
-            <label className="text-xs font-semibold text-muted-foreground flex items-center gap-1.5 uppercase tracking-wider">
-              <User className="w-3.5 h-3.5 text-red-400" /> Nome do Admin
-            </label>
-            <input
-              type="text"
-              placeholder="Ex: Mariana Maciel"
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              disabled={loading}
-              className="w-full bg-secondary/35 border border-border/50 rounded-xl px-4 py-3 text-xs text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-red-500/50 focus:ring-1 focus:ring-red-500/20 transition-all"
-              required
-            />
-          </div>
-
-          {/* Email */}
-          <div className="space-y-1.5">
-            <label className="text-xs font-semibold text-muted-foreground flex items-center gap-1.5 uppercase tracking-wider">
-              <Mail className="w-3.5 h-3.5 text-red-400" /> Email de Acesso
-            </label>
-            <input
-              type="email"
-              placeholder="admin@marianamaciel.com"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              disabled={loading}
-              className="w-full bg-secondary/35 border border-border/50 rounded-xl px-4 py-3 text-xs text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-red-500/50 focus:ring-1 focus:ring-red-500/20 transition-all"
-              required
-            />
-          </div>
-
-          {/* Password */}
-          <div className="space-y-1.5">
-            <label className="text-xs font-semibold text-muted-foreground flex items-center gap-1.5 uppercase tracking-wider">
-              <Lock className="w-3.5 h-3.5 text-red-400" /> Senha
-            </label>
-            <input
-              type="password"
-              placeholder="Defina a senha"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              disabled={loading}
-              className="w-full bg-secondary/35 border border-border/50 rounded-xl px-4 py-3 text-xs text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-red-500/50 focus:ring-1 focus:ring-red-500/20 transition-all"
-              required
-            />
-          </div>
-
           {/* Submit */}
           <Button
             type="submit"
@@ -150,39 +93,34 @@ export default function AdminGeneratorPage() {
             {loading ? (
               <>
                 <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                Criando Administrador...
+                Gerando Link...
               </>
             ) : (
-              'Gerar Novo Admin'
+              'Gerar Link de Cadastro'
             )}
           </Button>
         </form>
 
-        {/* Success Card Details */}
-        {createdUser && (
-          <div className="mt-6 bg-emerald-500/10 border border-emerald-500/20 rounded-2xl p-4 space-y-2 text-xs">
-            <p className="text-emerald-400 font-bold text-center mb-1">Acesso Criado com Sucesso!</p>
-            <div className="flex justify-between">
-              <span className="text-muted-foreground">Nome:</span>
-              <span className="font-mono text-foreground">{createdUser.name}</span>
-            </div>
-            <div className="flex justify-between">
-              <span className="text-muted-foreground">Email:</span>
-              <span className="font-mono text-foreground">{createdUser.email}</span>
-            </div>
-            <div className="flex justify-between">
-              <span className="text-muted-foreground">Senha:</span>
-              <span className="font-mono text-foreground">{createdUser.password}</span>
+        {/* Success Invite Details */}
+        {inviteLink && (
+          <div className="mt-6 bg-emerald-500/10 border border-emerald-500/20 rounded-2xl p-4 space-y-3 text-xs">
+            <p className="text-emerald-400 font-bold text-center mb-1 flex items-center justify-center gap-1">
+              <LinkIcon className="w-4 h-4" /> Link Criado com Sucesso!
+            </p>
+            <p className="text-muted-foreground text-[10px] text-center leading-relaxed">
+              Envie este link para a pessoa criar a própria conta de administrador. O link é de uso único e expirará caso ocorra qualquer erro de cadastro ou após 24 horas.
+            </p>
+            <div className="bg-black/40 border border-border/30 rounded-xl p-3 select-all break-all font-mono text-[10px] text-foreground">
+              {inviteLink}
             </div>
             <button
               onClick={() => {
-                const text = `Credenciais Admin:\nNome: ${createdUser.name}\nEmail: ${createdUser.email}\nSenha: ${createdUser.password}`
-                navigator.clipboard.writeText(text)
-                toast.success('Credenciais copiadas!')
+                navigator.clipboard.writeText(inviteLink)
+                toast.success('Link de convite copiado!')
               }}
-              className="w-full text-center mt-3 text-[10px] uppercase font-bold text-red-400 hover:underline cursor-pointer bg-transparent border-0"
+              className="w-full text-center mt-2 text-[10px] uppercase font-bold text-red-400 hover:underline cursor-pointer bg-transparent border-0"
             >
-              Copiar Credenciais
+              Copiar Link de Cadastro
             </button>
           </div>
         )}

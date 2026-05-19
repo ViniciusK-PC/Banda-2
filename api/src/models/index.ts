@@ -102,3 +102,12 @@ const MessageSchema = new Schema({
 
 export const Message = model('Message', MessageSchema);
 
+const AdminInviteSchema = new Schema({
+  token: { type: String, required: true, unique: true },
+  used: { type: Boolean, default: false },
+  createdAt: { type: Date, default: Date.now },
+  expiresAt: { type: Date, required: true }
+});
+
+export const AdminInvite = model('AdminInvite', AdminInviteSchema);
+

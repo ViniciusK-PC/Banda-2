@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Gerador de Credenciais Admin - Mariana Maciel</title>
+  <title>Gerador de Link de Convite Admin - Mariana Maciel</title>
   <!-- Google Fonts: Outfit & Inter -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -31,7 +31,7 @@
       background-color: var(--bg);
       color: var(--text);
       font-family: 'Inter', sans-serif;
-      min-height: 100-vh;
+      min-height: 100vh;
       display: flex;
       flex-direction: column;
       align-items: center;
@@ -127,7 +127,7 @@
       margin-bottom: 0.5rem;
     }
 
-    input, select {
+    input {
       width: 100%;
       background: rgba(255, 255, 255, 0.03);
       border: 1px solid rgba(255, 255, 255, 0.08);
@@ -139,7 +139,7 @@
       transition: all 0.2s ease;
     }
 
-    input:focus, select:focus {
+    input:focus {
       border-color: var(--primary);
       background: rgba(255, 255, 255, 0.05);
       box-shadow: 0 0 10px rgba(239, 68, 68, 0.1);
@@ -203,28 +203,16 @@
       display: none;
     }
 
-    .info-row {
-      display: flex;
-      justify-content: space-between;
-      margin-bottom: 0.5rem;
-      border-bottom: 1px solid rgba(255, 255, 255, 0.03);
-      padding-bottom: 0.5rem;
-    }
-
-    .info-row:last-child {
-      margin-bottom: 0;
-      border-bottom: none;
-      padding-bottom: 0;
-    }
-
-    .info-label {
-      color: var(--text-muted);
-    }
-
-    .info-val {
+    .link-container {
+      background: rgba(0, 0, 0, 0.4);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: 8px;
+      padding: 0.75rem;
       font-family: monospace;
-      font-weight: 600;
-      color: var(--text);
+      font-size: 0.75rem;
+      word-break: break-all;
+      margin-bottom: 0.75rem;
+      color: #fff;
     }
 
     .copy-btn {
@@ -260,8 +248,8 @@
         <div class="shield-icon">
           <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-shield-alert"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><line x1="12" x2="12" y1="8" y2="12"/><line x1="12" x2="12.01" y1="16" y2="16"/></svg>
         </div>
-        <h1>Criador de Administradores</h1>
-        <p class="subtitle">Insira a chave mestra de segurança para gerar uma nova credencial administrativa no banco de dados.</p>
+        <h1>Criador de Links de Convite</h1>
+        <p class="subtitle">Gere um link de uso único para que outra pessoa crie a própria conta de administrador de forma segura.</p>
       </div>
 
       <form id="genForm">
@@ -271,52 +259,32 @@
           <input type="url" id="apiUrl" value="http://ec2-54-209-111-28.compute-1.amazonaws.com/express-api" required>
         </div>
 
+        <!-- Frontend Web URL -->
+        <div class="form-group">
+          <label for="webUrl">URL do Painel (Frontend)</label>
+          <input type="url" id="webUrl" value="http://ec2-54-209-111-28.compute-1.amazonaws.com" required>
+        </div>
+
         <!-- Master Key -->
         <div class="form-group">
           <label for="masterKey">Chave Mestra de Segurança</label>
           <input type="password" id="masterKey" placeholder="••••••••" value="banda_super_secret_master_key_2026" required>
         </div>
 
-        <!-- Admin Name -->
-        <div class="form-group">
-          <label for="adminName">Nome do Novo Administrador</label>
-          <input type="text" id="adminName" placeholder="Ex: Mariana Maciel" required>
-        </div>
-
-        <!-- Admin Email -->
-        <div class="form-group">
-          <label for="adminEmail">Email de Acesso</label>
-          <input type="email" id="adminEmail" placeholder="admin@exemplo.com" required>
-        </div>
-
-        <!-- Admin Password -->
-        <div class="form-group">
-          <label for="adminPassword">Senha de Acesso</label>
-          <input type="password" id="adminPassword" placeholder="Insira a senha desejada" required>
-        </div>
-
-        <button type="submit" id="submitBtn" class="btn-submit">Gerar Acesso Admin</button>
+        <button type="submit" id="submitBtn" class="btn-submit">Gerar Link de Convite</button>
       </form>
 
       <!-- Alert messages -->
       <div id="notification" class="notification"></div>
 
-      <!-- Generated Credentials Detail -->
+      <!-- Generated Invitation Detail -->
       <div id="generatedDetail" class="generated-info">
-        <div class="info-row">
-          <span class="info-label">Nome:</span>
-          <span class="info-val" id="valName"></span>
-        </div>
-        <div class="info-row">
-          <span class="info-label">Email:</span>
-          <span class="info-val" id="valEmail"></span>
-        </div>
-        <div class="info-row">
-          <span class="info-label">Senha:</span>
-          <span class="info-val" id="valPass"></span>
-        </div>
-        <div style="text-align: right; margin-top: 0.5rem;">
-          <button class="copy-btn" id="copyBtn">Copiar Credenciais</button>
+        <p style="color: var(--text-muted); font-size: 0.75rem; margin-bottom: 0.75rem; line-height: 1.4;">
+          Envie o link abaixo para a pessoa realizar o cadastro. O link expira imediatamente após o primeiro uso, em caso de erro no cadastro, ou após 24 horas.
+        </p>
+        <div class="link-container" id="inviteLinkText"></div>
+        <div style="text-align: right;">
+          <button class="copy-btn" id="copyBtn">Copiar Link de Convite</button>
         </div>
       </div>
     </div>
@@ -329,68 +297,59 @@
     const submitBtn = document.getElementById('submitBtn');
     const notification = document.getElementById('notification');
     const generatedDetail = document.getElementById('generatedDetail');
+    const inviteLinkText = document.getElementById('inviteLinkText');
 
     form.addEventListener('submit', async (e) => {
       e.preventDefault();
       
       const apiUrl = document.getElementById('apiUrl').value.trim();
+      const webUrl = document.getElementById('webUrl').value.trim();
       const masterKey = document.getElementById('masterKey').value;
-      const name = document.getElementById('adminName').value.trim();
-      const email = document.getElementById('adminEmail').value.trim();
-      const password = document.getElementById('adminPassword').value;
 
       // Reset UI
       notification.className = 'notification';
       notification.style.display = 'none';
       generatedDetail.style.display = 'none';
       submitBtn.disabled = true;
-      submitBtn.textContent = 'Processando e gravando...';
+      submitBtn.textContent = 'Gerando token seguro...';
 
       try {
-        const response = await fetch(`${apiUrl}/api/auth/register-admin-master`, {
+        const response = await fetch(`${apiUrl}/api/auth/generate-invite`, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json'
           },
           body: JSON.stringify({
-            name,
-            email,
-            password,
             masterKey
           })
         });
 
         const data = await response.json();
 
-        if (response.ok) {
-          notification.textContent = 'Acesso administrativo criado com sucesso e gravado!';
+        if (response.ok && data.token) {
+          notification.textContent = 'Link de convite gerado com sucesso!';
           notification.className = 'notification success';
           
-          document.getElementById('valName').textContent = name;
-          document.getElementById('valEmail').textContent = email;
-          document.getElementById('valPass').textContent = password;
+          const fullLink = `${webUrl}/cadastro-admin-convite?token=${data.token}`;
+          inviteLinkText.textContent = fullLink;
           
           generatedDetail.style.display = 'block';
         } else {
-          throw new Error(data.message || 'Erro inesperado ao gerar admin.');
+          throw new Error(data.message || 'Erro ao gerar token.');
         }
       } catch (err) {
         notification.textContent = err.message;
         notification.className = 'notification error';
       } finally {
         submitBtn.disabled = false;
-        submitBtn.textContent = 'Gerar Acesso Admin';
+        submitBtn.textContent = 'Gerar Link de Convite';
       }
     });
 
     document.getElementById('copyBtn').addEventListener('click', () => {
-      const name = document.getElementById('valName').textContent;
-      const email = document.getElementById('valEmail').textContent;
-      const pass = document.getElementById('valPass').textContent;
-      
-      const text = `Credenciais Admin:\nNome: ${name}\nEmail: ${email}\nSenha: ${pass}`;
-      navigator.clipboard.writeText(text);
-      alert('Credenciais copiadas para a área de transferência!');
+      const link = inviteLinkText.textContent;
+      navigator.clipboard.writeText(link);
+      alert('Link de convite copiado para a área de transferência!');
     });
   </script>
 </body>
