@@ -44,16 +44,21 @@ export default function LoginPage() {
         setLoading(true)
         const data = await apiAuth.login(email, password)
         
+        if (data.user.role?.toUpperCase() === 'ADMIN') {
+          // Clear any stored data
+          localStorage.removeItem('banda_token')
+          localStorage.removeItem('banda_user')
+          toast.error('Acesso administrativo restrito nesta página. Faça login pelo portal administrativo.')
+          setLoading(false)
+          return
+        }
+
         // Save auth details
         localStorage.setItem('banda_token', data.token)
         localStorage.setItem('banda_user', JSON.stringify(data.user))
         
         toast.success(`Bem-vindo, ${data.user.name}!`)
-        if (data.user.role?.toUpperCase() === 'ADMIN') {
-          router.push('/admin')
-        } else {
-          router.push('/dashboard')
-        }
+        router.push('/dashboard')
       } catch (err: any) {
         console.error(err)
         toast.error(err.message || 'Credenciais inválidas. Tente novamente.')
@@ -88,7 +93,7 @@ export default function LoginPage() {
           </div>
           <h1 className="font-serif text-3xl font-bold tracking-tight">Mariana Maciel</h1>
           <p className="text-xs text-muted-foreground mt-2">
-            {isRegister ? 'Cadastre-se para acompanhar notícias e chats' : 'Faça login no painel administrativo ou área de fã'}
+            {isRegister ? 'Cadastre-se para acompanhar notícias e chats' : 'Faça login na sua Conta de Fã'}
           </p>
         </div>
 
