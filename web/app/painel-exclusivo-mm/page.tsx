@@ -671,7 +671,7 @@ export default function AdminPage() {
                     Ver Perfil
                   </button>
                   <Link
-                    href="/dashboard/perfil"
+                    href="/painel-exclusivo-mm/perfil"
                     onClick={() => setDropdownOpen(false)}
                     className="text-left text-xs font-medium text-foreground hover:bg-primary/10 px-3 py-2 rounded-xl transition-all flex items-center gap-2 cursor-pointer"
                   >

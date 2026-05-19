@@ -10,7 +10,7 @@ import { Button } from '@/components/ui/button'
 import { apiAuth, apiUpload, resolveMediaUrl } from '@/lib/api'
 import { toast } from 'sonner'
 
-export default function ProfilePage() {
+export default function AdminProfilePage() {
   const router = useRouter()
   const fileInputRef = useRef<HTMLInputElement>(null)
   
@@ -28,18 +28,19 @@ export default function ProfilePage() {
   const [saving, setSaving] = useState(false)
   const [uploading, setUploading] = useState(false)
 
-  // Verification & Auth check
+  // Verification & Auth check (strictly ADMIN role)
   useEffect(() => {
     if (typeof window !== 'undefined') {
       const token = localStorage.getItem('banda_token')
       const storedUser = localStorage.getItem('banda_user')
       if (!token || !storedUser) {
-        toast.error('Acesso restrito. Faça login como fã primeiro.')
-        router.push('/login')
+        toast.error('Acesso restrito. Faça login primeiro.')
+        router.push('/login-exclusivo-mm')
       } else {
         const parsed = JSON.parse(storedUser)
-        if (parsed.role?.toUpperCase() === 'ADMIN') {
-          router.push('/painel-exclusivo-mm/perfil')
+        if (parsed.role?.toUpperCase() !== 'ADMIN') {
+          toast.error('Acesso não autorizado.')
+          router.push('/dashboard')
         } else {
           setAuthorized(true)
           setUser(parsed)
@@ -112,12 +113,12 @@ export default function ProfilePage() {
       // Update local storage user session
       localStorage.setItem('banda_user', JSON.stringify(res.user))
       setUser(res.user)
-      toast.success('Perfil atualizado com sucesso!')
+      toast.success('Perfil de administrador atualizado com sucesso!')
       setPassword('')
       
       // Delay redirect to allow user to see success
       setTimeout(() => {
-        router.push(res.user.role?.toUpperCase() === 'ADMIN' ? '/painel-exclusivo-mm' : '/dashboard')
+        router.push('/painel-exclusivo-mm')
       }, 1000)
     } catch (err: any) {
       console.error(err)
@@ -149,7 +150,7 @@ export default function ProfilePage() {
               <span className="font-serif text-lg font-bold tracking-tight">Mariana Maciel</span>
             </Link>
             <span className="hidden sm:inline text-xs text-muted-foreground px-2.5 py-1 rounded-full bg-secondary/80 border border-border/40">
-              {user.role === 'ADMIN' ? 'Painel Administrativo' : 'Área do Fã'}
+              Painel Administrativo
             </span>
           </div>
 
@@ -170,22 +171,22 @@ export default function ProfilePage() {
         
         {/* Back Link */}
         <Link 
-          href={user.role === 'ADMIN' ? '/painel-exclusivo-mm' : '/dashboard'}
+          href="/painel-exclusivo-mm"
           className="inline-flex items-center gap-2 text-xs font-bold text-muted-foreground hover:text-foreground mb-8 transition-colors"
         >
           <ArrowLeft className="w-4 h-4" />
-          Voltar ao Painel
+          Voltar ao Painel Administrativo
         </Link>
 
         {/* Profile Card */}
-        <div className="relative overflow-hidden bg-card/40 border border-border/60 rounded-3xl p-8 shadow-2xl">
-          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-64 h-64 bg-primary/5 rounded-full blur-3xl pointer-events-none" />
+        <div className="relative overflow-hidden bg-card/40 border border-red-500/20 rounded-3xl p-8 shadow-2xl">
+          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-64 h-64 bg-red-600/5 rounded-full blur-3xl pointer-events-none" />
 
           {/* Heading */}
           <div className="text-center mb-10">
-            <h1 className="font-serif text-3xl font-bold text-foreground">Editar Meu Perfil</h1>
+            <h1 className="font-serif text-3xl font-bold text-foreground">Perfil do Administrador</h1>
             <p className="text-muted-foreground text-sm mt-2">
-              Personalize sua foto, altere suas credenciais de login e mantenha sua conta atualizada.
+              Gerencie suas informações de acesso e foto do painel de controle.
             </p>
           </div>
 
@@ -195,7 +196,7 @@ export default function ProfilePage() {
             <div className="flex flex-col items-center justify-center gap-3">
               <div 
                 onClick={handlePhotoClick}
-                className="relative group w-28 h-28 rounded-full border-2 border-primary/30 hover:border-primary cursor-pointer overflow-hidden transition-all shadow-lg"
+                className="relative group w-28 h-28 rounded-full border-2 border-red-500/30 hover:border-red-500 cursor-pointer overflow-hidden transition-all shadow-lg"
               >
                 {avatarUrl ? (
                   // eslint-disable-next-line @next/next/no-img-element
@@ -212,13 +213,13 @@ export default function ProfilePage() {
                 
                 {/* Photo hover overlay */}
                 <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-all flex flex-col items-center justify-center gap-1 text-[10px] font-bold text-white">
-                  <Camera className="w-5 h-5 text-primary" />
+                  <Camera className="w-5 h-5 text-red-400" />
                   <span>Alterar Foto</span>
                 </div>
 
                 {uploading && (
                   <div className="absolute inset-0 bg-black/75 flex items-center justify-center">
-                    <Loader2 className="w-6 h-6 animate-spin text-primary" />
+                    <Loader2 className="w-6 h-6 animate-spin text-red-500" />
                   </div>
                 )}
               </div>
@@ -235,7 +236,7 @@ export default function ProfilePage() {
               <button 
                 type="button"
                 onClick={handlePhotoClick}
-                className="text-[11px] font-bold text-primary hover:underline transition-all"
+                className="text-[11px] font-bold text-red-400 hover:underline transition-all"
               >
                 Enviar nova imagem
               </button>
@@ -247,15 +248,15 @@ export default function ProfilePage() {
               {/* Name Field */}
               <div>
                 <label className="block text-xs font-semibold text-muted-foreground mb-1.5 flex items-center gap-1.5">
-                  <UserIcon className="w-3.5 h-3.5 text-primary" />
-                  Nome Completo
+                  <UserIcon className="w-3.5 h-3.5 text-red-400" />
+                  Nome Administrativo
                 </label>
                 <input 
                   type="text" 
                   value={name}
                   onChange={(e) => setName(e.target.value)}
-                  placeholder="Seu nome completo"
-                  className="w-full rounded-xl bg-secondary border border-border/80 px-4 py-3 text-xs text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary transition-all"
+                  placeholder="Nome completo ou identificador"
+                  className="w-full rounded-xl bg-secondary border border-border/80 px-4 py-3 text-xs text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-red-500 focus:border-red-500 transition-all"
                   required
                 />
               </div>
@@ -263,15 +264,15 @@ export default function ProfilePage() {
               {/* Email Field */}
               <div>
                 <label className="block text-xs font-semibold text-muted-foreground mb-1.5 flex items-center gap-1.5">
-                  <Mail className="w-3.5 h-3.5 text-primary" />
-                  Endereço de E-mail
+                  <Mail className="w-3.5 h-3.5 text-red-400" />
+                  Email de Acesso
                 </label>
                 <input 
                   type="email" 
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   placeholder="seuemail@exemplo.com"
-                  className="w-full rounded-xl bg-secondary border border-border/80 px-4 py-3 text-xs text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary transition-all"
+                  className="w-full rounded-xl bg-secondary border border-border/80 px-4 py-3 text-xs text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-red-500 focus:border-red-500 transition-all"
                   required
                 />
               </div>
@@ -279,7 +280,7 @@ export default function ProfilePage() {
               {/* Password Field */}
               <div>
                 <label className="block text-xs font-semibold text-muted-foreground mb-1.5 flex items-center gap-1.5">
-                  <Lock className="w-3.5 h-3.5 text-primary" />
+                  <Lock className="w-3.5 h-3.5 text-red-400" />
                   Nova Senha (deixe vazio para não alterar)
                 </label>
                 <input 
@@ -287,7 +288,7 @@ export default function ProfilePage() {
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   placeholder="••••••••"
-                  className="w-full rounded-xl bg-secondary border border-border/80 px-4 py-3 text-xs text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary transition-all"
+                  className="w-full rounded-xl bg-secondary border border-border/80 px-4 py-3 text-xs text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-red-500 focus:border-red-500 transition-all"
                 />
               </div>
 
@@ -298,7 +299,7 @@ export default function ProfilePage() {
               <Button 
                 type="submit" 
                 disabled={saving || uploading} 
-                className="w-full bg-primary text-primary-foreground hover:bg-primary/90 font-semibold px-6 py-3.5 rounded-xl transition-all cursor-pointer shadow-lg shadow-primary/20 flex items-center justify-center text-xs"
+                className="w-full bg-red-600 text-white hover:bg-red-500 font-semibold px-6 py-3.5 rounded-xl transition-all cursor-pointer shadow-lg shadow-red-600/20 flex items-center justify-center text-xs border-0"
               >
                 {saving ? (
                   <>
@@ -314,7 +315,7 @@ export default function ProfilePage() {
               </Button>
 
               <Link 
-                href={user.role === 'ADMIN' ? '/painel-exclusivo-mm' : '/dashboard'}
+                href="/painel-exclusivo-mm"
                 className="w-full inline-flex items-center justify-center text-xs text-muted-foreground hover:text-foreground transition-all cursor-pointer py-3 text-center"
               >
                 Cancelar
