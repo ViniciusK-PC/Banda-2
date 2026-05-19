@@ -5,6 +5,7 @@ const UserSchema = new Schema({
   email: { type: String, required: true, unique: true },
   password: { type: String, required: true },
   role: { type: String, enum: ['ADMIN', 'USER'], default: 'USER' },
+  avatarUrl: { type: String, default: '' },
   createdAt: { type: Date, default: Date.now },
 });
 

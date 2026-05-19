@@ -53,8 +53,8 @@ const upload = multer({
   }
 });
 
-// POST upload file (protected, admin only)
-router.post('/', authenticateToken, isAdmin, upload.single('file'), (req: any, res: any) => {
+// POST upload file (protected, authenticated user only)
+router.post('/', authenticateToken, upload.single('file'), (req: any, res: any) => {
   try {
     if (!req.file) {
       return res.status(400).json({ message: 'Nenhum arquivo enviado.' });

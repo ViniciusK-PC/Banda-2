@@ -44,6 +44,7 @@ export interface User {
   name: string;
   email: string;
   role: 'ADMIN' | 'USER';
+  avatarUrl?: string;
 }
 
 export interface AuthResponse {
@@ -81,7 +82,7 @@ export const apiAuth = {
     return data;
   },
 
-  updateProfile: async (profileData: { name?: string; email?: string; password?: string }): Promise<{ message: string; user: User }> => {
+  updateProfile: async (profileData: { name?: string; email?: string; password?: string; avatarUrl?: string }): Promise<{ message: string; user: User }> => {
     const res = await fetch(`${getBaseUrl()}/api/auth/profile`, {
       method: 'PUT',
       headers: getHeaders(),

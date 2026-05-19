@@ -74,6 +74,7 @@ router.post('/login', async (req: any, res: any) => {
         name: user.name,
         email: user.email,
         role: user.role,
+        avatarUrl: (user as any).avatarUrl || '',
       }
     });
   } catch (error: any) {
@@ -84,7 +85,7 @@ router.post('/login', async (req: any, res: any) => {
 // PUT /api/auth/profile - Update user profile details (Protected)
 router.put('/profile', authenticateToken, async (req: any, res: any) => {
   try {
-    const { name, email, password } = req.body;
+    const { name, email, password, avatarUrl } = req.body;
     const userId = req.user.id;
 
     const user = await User.findById(userId);
@@ -108,6 +109,10 @@ router.put('/profile', authenticateToken, async (req: any, res: any) => {
       user.password = await bcrypt.hash(password, 10);
     }
 
+    if (avatarUrl !== undefined) {
+      (user as any).avatarUrl = avatarUrl;
+    }
+
     await user.save();
 
     res.json({
@@ -117,6 +122,7 @@ router.put('/profile', authenticateToken, async (req: any, res: any) => {
         name: user.name,
         email: user.email,
         role: user.role,
+        avatarUrl: (user as any).avatarUrl || '',
       }
     });
   } catch (error: any) {

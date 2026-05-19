@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { Menu, X, Music, Instagram, Youtube, Facebook, User, Edit, LogOut } from 'lucide-react'
 import { cn } from '@/lib/utils'
-import { Settings } from '@/lib/api'
+import { Settings, resolveMediaUrl } from '@/lib/api'
 import { toast } from 'sonner'
 
 const navItems = [
@@ -95,9 +95,18 @@ export function BandHeader({ settings }: BandHeaderProps) {
               <div className="relative">
                 <button
                   onClick={() => setDropdownOpen(!dropdownOpen)}
-                  className="text-xs font-semibold text-foreground bg-primary/10 hover:bg-primary/20 border border-primary/30 hover:border-primary/50 px-4 py-2.5 rounded-xl transition-all cursor-pointer shadow-md shadow-primary/5 flex items-center gap-1.5 focus:outline-none"
+                  className="text-xs font-semibold text-foreground bg-primary/10 hover:bg-primary/20 border border-primary/30 hover:border-primary/50 px-4 py-2.5 rounded-xl transition-all cursor-pointer shadow-md shadow-primary/5 flex items-center gap-2 focus:outline-none"
                 >
-                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                  {user.avatarUrl ? (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img 
+                      src={resolveMediaUrl(user.avatarUrl)} 
+                      alt="Avatar" 
+                      className="w-5 h-5 rounded-full object-cover border border-primary/45"
+                    />
+                  ) : (
+                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                  )}
                   Olá, {user.name.split(' ')[0]} 👋
                 </button>
                 
@@ -112,7 +121,7 @@ export function BandHeader({ settings }: BandHeaderProps) {
                       Ver Perfil
                     </Link>
                     <Link
-                      href={user.role?.toUpperCase() === 'ADMIN' ? '/admin' : '/dashboard?edit=true'}
+                      href="/dashboard/perfil"
                       onClick={() => setDropdownOpen(false)}
                       className="text-left text-xs font-medium text-foreground hover:bg-primary/10 px-3 py-2 rounded-xl transition-all flex items-center gap-2 cursor-pointer"
                     >
@@ -204,13 +213,20 @@ export function BandHeader({ settings }: BandHeaderProps) {
               {user && (
                 <div className="flex flex-col gap-2 w-full">
                   <div className="text-sm font-semibold text-foreground px-2">Olá, {user.name} 👋</div>
-                  <div className="flex gap-2">
+                  <div className="flex flex-wrap gap-2">
                     <Link
                       href={user.role === 'ADMIN' ? '/admin' : '/dashboard'}
                       onClick={() => setIsOpen(false)}
-                      className="flex-1 text-center text-xs font-semibold text-foreground bg-primary/10 hover:bg-primary/20 border border-primary/30 hover:border-primary/50 px-4 py-2.5 rounded-xl transition-all cursor-pointer"
+                      className="flex-1 text-center text-xs font-semibold text-foreground bg-primary/10 hover:bg-primary/20 border border-primary/30 hover:border-primary/50 px-3 py-2.5 rounded-xl transition-all cursor-pointer"
                     >
-                      Meu Painel
+                      Painel
+                    </Link>
+                    <Link
+                      href="/dashboard/perfil"
+                      onClick={() => setIsOpen(false)}
+                      className="flex-1 text-center text-xs font-semibold text-foreground bg-primary/10 hover:bg-primary/20 border border-primary/30 hover:border-primary/50 px-3 py-2.5 rounded-xl transition-all cursor-pointer"
+                    >
+                      Editar
                     </Link>
                     <button
                       onClick={() => {
@@ -221,7 +237,7 @@ export function BandHeader({ settings }: BandHeaderProps) {
                         toast.success('Desconectado com sucesso.')
                         window.location.reload()
                       }}
-                      className="text-xs font-semibold text-rose-400 bg-rose-500/10 hover:bg-rose-500/20 border border-rose-500/20 px-4 py-2.5 rounded-xl transition-all cursor-pointer"
+                      className="text-xs font-semibold text-rose-400 bg-rose-500/10 hover:bg-rose-500/20 border border-rose-500/20 px-3 py-2.5 rounded-xl transition-all cursor-pointer"
                     >
                       Sair
                     </button>
