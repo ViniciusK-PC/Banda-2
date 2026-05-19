@@ -819,33 +819,7 @@ export default function AdminPage() {
               </>
             )}
             {activeTab === 'messages' && (
-              <>
-                {selectedMessages.size > 0 && (
-                  <Button 
-                    disabled={bulkDeleting}
-                    onClick={async () => {
-                      if (!confirm(`Tem certeza que deseja excluir ${selectedMessages.size} ${selectedMessages.size === 1 ? 'mensagem' : 'mensagens'}? Esta ação não pode ser desfeita.`)) return
-                      try {
-                        setBulkDeleting(true)
-                        const ids = Array.from(selectedMessages)
-                        await Promise.all(ids.map(id => apiMessages.delete(id)))
-                        toast.success(`${ids.length} ${ids.length === 1 ? 'mensagem excluída' : 'mensagens excluídas'} com sucesso!`)
-                        setSelectedMessages(new Set())
-                        fetchMessages()
-                      } catch (err: any) {
-                        toast.error('Erro ao excluir mensagens selecionadas.')
-                      } finally {
-                        setBulkDeleting(false)
-                      }
-                    }}
-                    variant="destructive"
-                    className="w-full sm:w-auto cursor-pointer shadow-lg animate-fade-in"
-                  >
-                    {bulkDeleting ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Trash2 className="w-4 h-4 mr-2" />}
-                    Excluir Selecionadas ({selectedMessages.size})
-                  </Button>
-                )}
-              </>
+              <></>
             )}
           </div>
         </div>
