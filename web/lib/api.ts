@@ -367,4 +367,60 @@ export const apiAlbums = {
   },
 };
 
+// --- MESSAGE / INBOX TYPES & ENDPOINTS ---
+
+export interface Message {
+  _id: string;
+  name: string;
+  email: string;
+  subject: string;
+  message: string;
+  read: boolean;
+  createdAt: string;
+}
+
+export const apiMessages = {
+  send: async (messageData: Omit<Message, '_id' | 'read' | 'createdAt'>): Promise<{ message: string }> => {
+    const res = await fetch(`${getBaseUrl()}/api/messages`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(messageData),
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.message || 'Erro ao enviar mensagem');
+    return data;
+  },
+
+  getAll: async (): Promise<Message[]> => {
+    const res = await fetch(`${getBaseUrl()}/api/messages`, {
+      headers: getHeaders(),
+      cache: 'no-store',
+    });
+    if (!res.ok) throw new Error('Erro ao buscar mensagens');
+    return res.json();
+  },
+
+  toggleRead: async (id: string, read: boolean): Promise<{ message: string; updatedMessage: Message }> => {
+    const res = await fetch(`${getBaseUrl()}/api/messages/${id}/read`, {
+      method: 'PATCH',
+      headers: getHeaders(),
+      body: JSON.stringify({ read }),
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.message || 'Erro ao atualizar status da mensagem');
+    return data;
+  },
+
+  delete: async (id: string): Promise<{ message: string }> => {
+    const res = await fetch(`${getBaseUrl()}/api/messages/${id}`, {
+      method: 'DELETE',
+      headers: getHeaders(),
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.message || 'Erro ao excluir mensagem');
+    return data;
+  },
+};
+
+
 

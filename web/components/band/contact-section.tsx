@@ -1,8 +1,9 @@
 import { useState } from 'react'
-import { Mail, Phone, MapPin, Send, Instagram, Youtube, Facebook, Music } from 'lucide-react'
+import { Mail, Phone, MapPin, Send, Instagram, Youtube, Facebook, Music, Loader2 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
-import { Settings } from '@/lib/api'
+import { Settings, apiMessages } from '@/lib/api'
+import { toast } from 'sonner'
 
 interface ContactSectionProps {
   settings: Settings;
@@ -15,11 +16,31 @@ export function ContactSection({ settings }: ContactSectionProps) {
     subject: '',
     message: ''
   })
+  const [sending, setSending] = useState(false)
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    // Handle form submission
-    console.log('Form submitted:', formData)
+    if (!formData.name || !formData.email || !formData.subject || !formData.message) {
+      toast.error('Preencha todos os campos.')
+      return
+    }
+
+    try {
+      setSending(true)
+      await apiMessages.send(formData)
+      toast.success('Sua mensagem foi enviada com sucesso! Responderemos em breve.')
+      setFormData({
+        name: '',
+        email: '',
+        subject: '',
+        message: ''
+      })
+    } catch (err: any) {
+      console.error(err)
+      toast.error(err.message || 'Erro ao enviar a mensagem. Tente novamente mais tarde.')
+    } finally {
+      setSending(false)
+    }
   }
 
   return (
@@ -195,9 +216,18 @@ export function ContactSection({ settings }: ContactSectionProps) {
                 />
               </div>
 
-              <Button type="submit" className="w-full bg-primary text-primary-foreground hover:bg-primary/90">
-                <Send className="w-4 h-4 mr-2" />
-                Enviar Mensagem
+              <Button type="submit" disabled={sending} className="w-full bg-primary text-primary-foreground hover:bg-primary/90 cursor-pointer disabled:opacity-75">
+                {sending ? (
+                  <>
+                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                    Enviando Mensagem...
+                  </>
+                ) : (
+                  <>
+                    <Send className="w-4 h-4 mr-2" />
+                    Enviar Mensagem
+                  </>
+                )}
               </Button>
             </form>
           </div>

@@ -6,10 +6,11 @@ import Link from 'next/link'
 import { 
   Calendar, Camera, LogOut, Plus, Edit2, Trash2, Globe, Music, Disc3,
   MapPin, Clock, Ticket, Loader2, ArrowLeft, Image as ImageIcon, Video, Link as LinkIcon,
-  Settings as SettingsIcon, Save, CheckSquare, Square, X as XIcon, GripVertical, Upload
+  Settings as SettingsIcon, Save, CheckSquare, Square, X as XIcon, GripVertical, Upload,
+  Mail, Check, Inbox, Eye, Reply
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
-import { apiShows, apiMedia, apiSettings, apiAlbums, apiUpload, resolveMediaUrl, Show, Media, Settings, Album, Track } from '@/lib/api'
+import { apiShows, apiMedia, apiSettings, apiAlbums, apiUpload, apiMessages, resolveMediaUrl, Show, Media, Settings, Album, Track, Message } from '@/lib/api'
 import { toast } from 'sonner'
 
 export default function AdminPage() {
@@ -18,13 +19,14 @@ export default function AdminPage() {
   const [user, setUser] = useState<any>(null)
   
   // Tab state
-  const [activeTab, setActiveTab] = useState<'shows' | 'media' | 'music' | 'settings'>('shows')
+  const [activeTab, setActiveTab] = useState<'shows' | 'media' | 'music' | 'settings' | 'messages'>('shows')
   
   // Loading states
   const [loadingShows, setLoadingShows] = useState(true)
   const [loadingMedia, setLoadingMedia] = useState(true)
   const [loadingSettings, setLoadingSettings] = useState(true)
   const [loadingAlbums, setLoadingAlbums] = useState(true)
+  const [loadingMessages, setLoadingMessages] = useState(true)
   const [settingsSaving, setSettingsSaving] = useState(false)
   
   // Data states
@@ -32,6 +34,8 @@ export default function AdminPage() {
   const [media, setMedia] = useState<Media[]>([])
   const [settings, setSettings] = useState<Settings | null>(null)
   const [albums, setAlbums] = useState<Album[]>([])
+  const [messages, setMessages] = useState<Message[]>([])
+  const [expandedMessageId, setExpandedMessageId] = useState<string | null>(null)
 
   // Bulk selection states
   const [selectedMedia, setSelectedMedia] = useState<Set<string>>(new Set())
@@ -192,12 +196,26 @@ export default function AdminPage() {
     }
   }
 
+  const fetchMessages = async () => {
+    try {
+      setLoadingMessages(true)
+      const data = await apiMessages.getAll()
+      setMessages(data)
+    } catch (err: any) {
+      console.error(err)
+      toast.error('Erro ao buscar mensagens da caixa postal.')
+    } finally {
+      setLoadingMessages(false)
+    }
+  }
+
   useEffect(() => {
     if (authorized) {
       fetchShows()
       fetchMedia()
       fetchSettings()
       fetchAlbums()
+      fetchMessages()
     }
   }, [authorized])
 
@@ -313,6 +331,28 @@ export default function AdminPage() {
       toast.error(err.message || 'Erro ao salvar configurações.')
     } finally {
       setSettingsSaving(false)
+    }
+  }
+
+  const handleToggleMessageRead = async (id: string, read: boolean) => {
+    try {
+      await apiMessages.toggleRead(id, read)
+      toast.success(read ? 'Mensagem marcada como lida!' : 'Mensagem marcada como não lida!')
+      fetchMessages()
+    } catch (err: any) {
+      toast.error('Erro ao atualizar status da mensagem.')
+    }
+  }
+
+  const handleDeleteMessage = async (id: string) => {
+    if (!confirm('Excluir esta mensagem permanentemente?')) return
+    try {
+      await apiMessages.delete(id)
+      toast.success('Mensagem excluída com sucesso!')
+      if (expandedMessageId === id) setExpandedMessageId(null)
+      fetchMessages()
+    } catch (err: any) {
+      toast.error('Erro ao excluir mensagem.')
     }
   }
 
@@ -623,6 +663,22 @@ export default function AdminPage() {
             >
               <SettingsIcon className="w-4 h-4" />
               Configurações do Site
+            </button>
+            <button
+              onClick={() => setActiveTab('messages')}
+              className={`flex-1 sm:flex-none flex items-center justify-center gap-2 px-6 py-2.5 rounded-xl text-sm font-medium transition-all cursor-pointer ${
+                activeTab === 'messages' 
+                  ? 'bg-primary text-primary-foreground shadow-md' 
+                  : 'hover:bg-secondary/40 text-muted-foreground'
+              }`}
+            >
+              <Mail className="w-4 h-4" />
+              Caixa Postal
+              {messages.filter(m => !m.read).length > 0 && (
+                <span className="ml-1 px-1.5 py-0.5 text-[10px] font-bold bg-destructive text-white rounded-full leading-none">
+                  {messages.filter(m => !m.read).length}
+                </span>
+              )}
             </button>
           </div>
 
@@ -1448,6 +1504,177 @@ export default function AdminPage() {
                 </div>
               </form>
             )}
+          </div>
+        )}
+
+        {/* Tab Contents: MESSAGES / CAIXA POSTAL */}
+        {activeTab === 'messages' && (
+          <div className="space-y-6">
+            {/* Stats Summary Strip */}
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+              <div className="bg-card/30 border border-border/60 rounded-2xl p-4 flex items-center justify-between shadow-lg backdrop-blur-md">
+                <div>
+                  <p className="text-xs text-muted-foreground uppercase font-bold">Total Recebidas</p>
+                  <p className="text-2xl font-serif font-bold mt-1 text-foreground">{messages.length}</p>
+                </div>
+                <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center text-primary">
+                  <Inbox className="w-5 h-5" />
+                </div>
+              </div>
+
+              <div className="bg-card/30 border border-border/60 rounded-2xl p-4 flex items-center justify-between shadow-lg backdrop-blur-md">
+                <div>
+                  <p className="text-xs text-muted-foreground uppercase font-bold">Não Lidas</p>
+                  <p className="text-2xl font-serif font-bold mt-1 text-amber-400">{messages.filter(m => !m.read).length}</p>
+                </div>
+                <div className="w-10 h-10 rounded-xl bg-amber-500/10 flex items-center justify-center text-amber-400">
+                  <Mail className="w-5 h-5" />
+                </div>
+              </div>
+
+              <div className="bg-card/30 border border-border/60 rounded-2xl p-4 flex items-center justify-between shadow-lg backdrop-blur-md">
+                <div>
+                  <p className="text-xs text-muted-foreground uppercase font-bold">Lidas</p>
+                  <p className="text-2xl font-serif font-bold mt-1 text-emerald-400">{messages.filter(m => m.read).length}</p>
+                </div>
+                <div className="w-10 h-10 rounded-xl bg-emerald-500/10 flex items-center justify-center text-emerald-400">
+                  <Check className="w-5 h-5" />
+                </div>
+              </div>
+            </div>
+
+            {/* Messages List & Details */}
+            <div className="bg-card/20 border border-border/80 rounded-3xl overflow-hidden shadow-xl backdrop-blur-md p-6">
+              {loadingMessages ? (
+                <div className="flex flex-col items-center justify-center py-20 gap-3 text-muted-foreground">
+                  <Loader2 className="w-8 h-8 animate-spin text-primary" />
+                  <p className="text-sm">Carregando mensagens da caixa postal...</p>
+                </div>
+              ) : messages.length === 0 ? (
+                <div className="text-center py-20 px-4">
+                  <Inbox className="w-12 h-12 text-primary/30 mx-auto mb-4" />
+                  <h3 className="font-semibold text-lg">Sua caixa postal está vazia!</h3>
+                  <p className="text-muted-foreground text-sm mt-2 max-w-sm mx-auto">
+                    Mensagens enviadas através do formulário de contato do site aparecerão aqui em tempo real.
+                  </p>
+                </div>
+              ) : (
+                <div className="space-y-4">
+                  {messages.map((message) => {
+                    const isExpanded = expandedMessageId === message._id
+                    return (
+                      <div 
+                        key={message._id}
+                        className={`border rounded-2xl transition-all overflow-hidden ${
+                          isExpanded 
+                            ? 'border-primary/60 bg-secondary/15 ring-1 ring-primary/20 shadow-md' 
+                            : 'border-border/60 bg-card/40 hover:border-primary/30 hover:bg-secondary/10'
+                        }`}
+                      >
+                        {/* Header/Accordion Trigger */}
+                        <div 
+                          onClick={() => {
+                            if (isExpanded) {
+                              setExpandedMessageId(null)
+                            } else {
+                              setExpandedMessageId(message._id)
+                              if (!message.read) {
+                                handleToggleMessageRead(message._id, true)
+                              }
+                            }
+                          }}
+                          className="p-5 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 cursor-pointer select-none"
+                        >
+                          <div className="flex items-start gap-3 min-w-0">
+                            {/* Unread Indicator dot */}
+                            <div className="mt-1.5 shrink-0">
+                              {!message.read ? (
+                                <span className="relative flex h-2.5 w-2.5">
+                                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-amber-400 opacity-75"></span>
+                                  <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-amber-500"></span>
+                                </span>
+                              ) : (
+                                <div className="h-2.5 w-2.5 rounded-full bg-muted-foreground/30" />
+                              )}
+                            </div>
+
+                            <div className="min-w-0">
+                              <div className="flex items-center gap-2 flex-wrap">
+                                <h4 className={`font-semibold text-sm ${!message.read ? 'text-foreground' : 'text-muted-foreground'}`}>
+                                  {message.name}
+                                </h4>
+                                <span className="text-xs text-muted-foreground">({message.email})</span>
+                              </div>
+                              <p className={`text-sm mt-1 font-serif line-clamp-1 ${!message.read ? 'text-primary font-medium' : 'text-muted-foreground'}`}>
+                                {message.subject}
+                              </p>
+                            </div>
+                          </div>
+
+                          <div className="flex items-center gap-3 shrink-0 ml-5 sm:ml-0">
+                            <span className="text-xs text-muted-foreground">
+                              {formatDateString(message.createdAt)} às {formatTimeString(message.createdAt)}
+                            </span>
+                            <div className="h-4 w-px bg-border/60" />
+                            <span className="text-xs text-primary font-medium">
+                              {isExpanded ? 'Recolher' : 'Ler mensagem'}
+                            </span>
+                          </div>
+                        </div>
+
+                        {/* Expandable Body */}
+                        {isExpanded && (
+                          <div className="px-5 pb-5 pt-1 border-t border-border/40 space-y-4">
+                            <div className="bg-secondary/30 border border-border/50 rounded-xl p-4 text-sm leading-relaxed text-foreground whitespace-pre-wrap font-sans">
+                              {message.message}
+                            </div>
+
+                            <div className="flex flex-wrap items-center justify-between gap-3 pt-2">
+                              {/* Reply / Mark Actions */}
+                              <div className="flex flex-wrap items-center gap-2">
+                                <a 
+                                  href={`mailto:${message.email}?subject=Re: ${encodeURIComponent(message.subject)}`}
+                                  className="flex items-center gap-1.5 text-xs font-semibold text-primary-foreground bg-primary hover:bg-primary/90 transition-all cursor-pointer px-4 py-2 rounded-xl"
+                                >
+                                  <Reply className="w-3.5 h-3.5" />
+                                  Responder por E-mail
+                                </a>
+
+                                <button
+                                  onClick={() => handleToggleMessageRead(message._id, !message.read)}
+                                  className="flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground transition-all cursor-pointer px-3.5 py-2 rounded-xl bg-secondary/85 hover:bg-secondary border border-border/50"
+                                >
+                                  {message.read ? (
+                                    <>
+                                      <Mail className="w-3.5 h-3.5 text-amber-500" />
+                                      Marcar como Não Lida
+                                    </>
+                                  ) : (
+                                    <>
+                                      <Check className="w-3.5 h-3.5 text-emerald-500" />
+                                      Marcar como Lida
+                                    </>
+                                  )}
+                                </button>
+                              </div>
+
+                              {/* Delete Action */}
+                              <button
+                                onClick={() => handleDeleteMessage(message._id)}
+                                className="flex items-center gap-1.5 text-xs text-rose-400 hover:text-rose-300 hover:bg-rose-500/10 transition-all cursor-pointer px-3.5 py-2 rounded-xl bg-secondary/60 border border-rose-500/20"
+                              >
+                                <Trash2 className="w-3.5 h-3.5" />
+                                Excluir Permanentemente
+                              </button>
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    )
+                  })}
+                </div>
+              )}
+            </div>
           </div>
         )}
       </div>

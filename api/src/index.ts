@@ -9,6 +9,7 @@ import mediaRoutes from './routes/media';
 import settingsRoutes from './routes/settings';
 import albumsRoutes from './routes/albums';
 import uploadRoutes from './routes/upload';
+import messagesRoutes from './routes/messages';
 
 dotenv.config();
 
@@ -31,6 +32,7 @@ app.use('/api/media', mediaRoutes);
 app.use('/api/settings', settingsRoutes);
 app.use('/api/albums', albumsRoutes);
 app.use('/api/upload', uploadRoutes);
+app.use('/api/messages', messagesRoutes);
 
 
 // Health check
