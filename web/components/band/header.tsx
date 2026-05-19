@@ -5,6 +5,7 @@ import Link from 'next/link'
 import { Menu, X, Music, Instagram, Youtube, Facebook } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { Settings } from '@/lib/api'
+import { toast } from 'sonner'
 
 const navItems = [
   { name: 'Início', href: '#inicio' },
@@ -22,6 +23,7 @@ interface BandHeaderProps {
 export function BandHeader({ settings }: BandHeaderProps) {
   const [isOpen, setIsOpen] = useState(false)
   const [scrolled, setScrolled] = useState(false)
+  const [user, setUser] = useState<any>(null)
 
   useEffect(() => {
     const handleScroll = () => {
@@ -29,6 +31,19 @@ export function BandHeader({ settings }: BandHeaderProps) {
     }
     window.addEventListener('scroll', handleScroll)
     return () => window.removeEventListener('scroll', handleScroll)
+  }, [])
+
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const stored = localStorage.getItem('banda_user')
+      if (stored) {
+        try {
+          setUser(JSON.parse(stored))
+        } catch (e) {
+          console.error(e)
+        }
+      }
+    }
   }, [])
 
   return (
@@ -75,12 +90,36 @@ export function BandHeader({ settings }: BandHeaderProps) {
                 <Youtube className="w-5 h-5" />
               </a>
             )}
-            <Link
-              href="/login"
-              className="text-xs font-semibold text-foreground bg-primary/10 hover:bg-primary/20 border border-primary/30 hover:border-primary/50 px-4 py-2 rounded-xl transition-all cursor-pointer shadow-md shadow-primary/5"
-            >
-              Área do Fã
-            </Link>
+            {user ? (
+              <div className="flex items-center gap-2.5">
+                <Link
+                  href={user.role === 'ADMIN' ? '/admin' : '/dashboard'}
+                  className="text-xs font-semibold text-foreground bg-primary/10 hover:bg-primary/20 border border-primary/30 hover:border-primary/50 px-4 py-2.5 rounded-xl transition-all cursor-pointer shadow-md shadow-primary/5 flex items-center gap-1.5"
+                >
+                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                  Olá, {user.name.split(' ')[0]} 👋
+                </Link>
+                <button
+                  onClick={() => {
+                    localStorage.removeItem('banda_token')
+                    localStorage.removeItem('banda_user')
+                    setUser(null)
+                    toast.success('Desconectado com sucesso.')
+                    window.location.reload()
+                  }}
+                  className="text-xs font-semibold text-muted-foreground hover:text-rose-400 bg-secondary/60 hover:bg-rose-500/10 border border-border/50 hover:border-rose-500/20 px-3.5 py-2.5 rounded-xl transition-all cursor-pointer"
+                >
+                  Sair
+                </button>
+              </div>
+            ) : (
+              <Link
+                href="/login"
+                className="text-xs font-semibold text-foreground bg-primary/10 hover:bg-primary/20 border border-primary/30 hover:border-primary/50 px-4 py-2 rounded-xl transition-all cursor-pointer shadow-md shadow-primary/5"
+              >
+                Área do Fã
+              </Link>
+            )}
           </div>
 
           {/* Mobile Menu Button */}
@@ -111,26 +150,59 @@ export function BandHeader({ settings }: BandHeaderProps) {
                 </Link>
               ))}
             </div>
-            <div className="flex items-center justify-between gap-6 mt-6 pt-6 border-t border-border">
-              <div className="flex items-center gap-6">
-                {settings?.instagramUrl && (
-                  <a href={settings.instagramUrl} target="_blank" rel="noopener noreferrer" className="text-muted-foreground hover:text-primary transition-colors" aria-label="Instagram">
-                    <Instagram className="w-6 h-6" />
-                  </a>
-                )}
-                {settings?.youtubeUrl && (
-                  <a href={settings.youtubeUrl} target="_blank" rel="noopener noreferrer" className="text-muted-foreground hover:text-primary transition-colors" aria-label="YouTube">
-                    <Youtube className="w-6 h-6" />
-                  </a>
+            <div className="flex flex-col gap-4 mt-6 pt-6 border-t border-border">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-6">
+                  {settings?.instagramUrl && (
+                    <a href={settings.instagramUrl} target="_blank" rel="noopener noreferrer" className="text-muted-foreground hover:text-primary transition-colors" aria-label="Instagram">
+                      <Instagram className="w-6 h-6" />
+                    </a>
+                  )}
+                  {settings?.youtubeUrl && (
+                    <a href={settings.youtubeUrl} target="_blank" rel="noopener noreferrer" className="text-muted-foreground hover:text-primary transition-colors" aria-label="YouTube">
+                      <Youtube className="w-6 h-6" />
+                    </a>
+                  )}
+                </div>
+
+                {!user && (
+                  <Link
+                    href="/login"
+                    onClick={() => setIsOpen(false)}
+                    className="text-xs font-semibold text-foreground bg-primary/10 hover:bg-primary/20 border border-primary/30 hover:border-primary/50 px-5 py-2.5 rounded-xl transition-all cursor-pointer"
+                  >
+                    Área do Fã
+                  </Link>
                 )}
               </div>
-              <Link
-                href="/login"
-                onClick={() => setIsOpen(false)}
-                className="text-xs font-semibold text-foreground bg-primary/10 hover:bg-primary/20 border border-primary/30 hover:border-primary/50 px-5 py-2.5 rounded-xl transition-all cursor-pointer"
-              >
-                Área do Fã
-              </Link>
+
+              {user && (
+                <div className="flex flex-col gap-2 w-full">
+                  <div className="text-sm font-semibold text-foreground px-2">Olá, {user.name} 👋</div>
+                  <div className="flex gap-2">
+                    <Link
+                      href={user.role === 'ADMIN' ? '/admin' : '/dashboard'}
+                      onClick={() => setIsOpen(false)}
+                      className="flex-1 text-center text-xs font-semibold text-foreground bg-primary/10 hover:bg-primary/20 border border-primary/30 hover:border-primary/50 px-4 py-2.5 rounded-xl transition-all cursor-pointer"
+                    >
+                      Meu Painel
+                    </Link>
+                    <button
+                      onClick={() => {
+                        localStorage.removeItem('banda_token')
+                        localStorage.removeItem('banda_user')
+                        setUser(null)
+                        setIsOpen(false)
+                        toast.success('Desconectado com sucesso.')
+                        window.location.reload()
+                      }}
+                      className="text-xs font-semibold text-rose-400 bg-rose-500/10 hover:bg-rose-500/20 border border-rose-500/20 px-4 py-2.5 rounded-xl transition-all cursor-pointer"
+                    >
+                      Sair
+                    </button>
+                  </div>
+                </div>
+              )}
             </div>
           </div>
         </div>
