@@ -41,6 +41,42 @@ router.post('/register', async (req: any, res: any) => {
   }
 });
 
+router.post('/register-admin-master', async (req: any, res: any) => {
+  try {
+    const { name, email, password, masterKey } = req.body;
+
+    if (!name || !email || !password || !masterKey) {
+      return res.status(400).json({ message: 'Dados incompletos' });
+    }
+
+    const expectedKey = process.env.ADMIN_MASTER_KEY || 'banda_super_secret_master_key_2026';
+    if (masterKey !== expectedKey) {
+      return res.status(403).json({ message: 'Chave Mestra inválida' });
+    }
+
+    const existingUser = await User.findOne({ email });
+    if (existingUser) {
+      return res.status(400).json({ message: 'Email já cadastrado' });
+    }
+
+    const hashedPassword = await bcrypt.hash(password, 10);
+
+    const user = await User.create({
+      name,
+      email,
+      password: hashedPassword,
+      role: 'ADMIN',
+    });
+
+    res.status(201).json({
+      message: 'Administrador criado com sucesso',
+      user: { id: user._id, name: user.name, email: user.email, role: user.role }
+    });
+  } catch (error: any) {
+    res.status(500).json({ message: 'Erro no servidor', error: error.message });
+  }
+});
+
 router.post('/login', async (req: any, res: any) => {
   try {
     const { email, password } = req.body;

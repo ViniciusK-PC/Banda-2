@@ -1,0 +1,397 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Gerador de Credenciais Admin - Mariana Maciel</title>
+  <!-- Google Fonts: Outfit & Inter -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+  
+  <style>
+    :root {
+      --bg: #09090b;
+      --card-bg: rgba(20, 20, 25, 0.6);
+      --border: rgba(239, 68, 68, 0.15);
+      --primary: #ef4444;
+      --primary-hover: #dc2626;
+      --text: #f4f4f5;
+      --text-muted: #a1a1aa;
+      --glow: rgba(239, 68, 68, 0.1);
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      background-color: var(--bg);
+      color: var(--text);
+      font-family: 'Inter', sans-serif;
+      min-height: 100-vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 2rem 1rem;
+      position: relative;
+      overflow-x: hidden;
+    }
+
+    /* Ambient Background Glows */
+    .glow-1 {
+      position: absolute;
+      top: 10%;
+      left: 10%;
+      width: 350px;
+      height: 350px;
+      background: radial-gradient(circle, rgba(239, 68, 68, 0.08) 0%, transparent 70%);
+      pointer-events: none;
+      z-index: 1;
+    }
+
+    .glow-2 {
+      position: absolute;
+      bottom: 10%;
+      right: 10%;
+      width: 350px;
+      height: 350px;
+      background: radial-gradient(circle, rgba(168, 85, 247, 0.05) 0%, transparent 70%);
+      pointer-events: none;
+      z-index: 1;
+    }
+
+    .container {
+      width: 100%;
+      max-width: 480px;
+      position: relative;
+      z-index: 10;
+    }
+
+    .card {
+      background: var(--card-bg);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      border: 1px solid var(--border);
+      border-radius: 24px;
+      padding: 2.5rem 2rem;
+      box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5), 0 0 40px var(--glow);
+    }
+
+    .header {
+      text-align: center;
+      margin-bottom: 2rem;
+    }
+
+    .shield-icon {
+      width: 60px;
+      height: 60px;
+      background: rgba(239, 68, 68, 0.1);
+      border: 1px solid rgba(239, 68, 68, 0.25);
+      border-radius: 16px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      margin-bottom: 1rem;
+      color: var(--primary);
+    }
+
+    h1 {
+      font-family: 'Outfit', sans-serif;
+      font-size: 1.5rem;
+      font-weight: 700;
+      letter-spacing: -0.025em;
+      margin-bottom: 0.5rem;
+    }
+
+    .subtitle {
+      font-size: 0.825rem;
+      color: var(--text-muted);
+      line-height: 1.5;
+    }
+
+    .form-group {
+      margin-bottom: 1.25rem;
+    }
+
+    label {
+      display: block;
+      font-size: 0.75rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: var(--text-muted);
+      margin-bottom: 0.5rem;
+    }
+
+    input, select {
+      width: 100%;
+      background: rgba(255, 255, 255, 0.03);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: 12px;
+      padding: 0.75rem 1rem;
+      color: var(--text);
+      font-size: 0.875rem;
+      outline: none;
+      transition: all 0.2s ease;
+    }
+
+    input:focus, select:focus {
+      border-color: var(--primary);
+      background: rgba(255, 255, 255, 0.05);
+      box-shadow: 0 0 10px rgba(239, 68, 68, 0.1);
+    }
+
+    .btn-submit {
+      width: 100%;
+      background: var(--primary);
+      color: #fff;
+      border: none;
+      border-radius: 12px;
+      padding: 0.875rem;
+      font-size: 0.875rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      margin-top: 1rem;
+      box-shadow: 0 4px 12px rgba(239, 68, 68, 0.2);
+    }
+
+    .btn-submit:hover:not(:disabled) {
+      background: var(--primary-hover);
+      box-shadow: 0 6px 16px rgba(239, 68, 68, 0.35);
+    }
+
+    .btn-submit:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+
+    .notification {
+      margin-top: 1.5rem;
+      padding: 1rem;
+      border-radius: 12px;
+      font-size: 0.825rem;
+      line-height: 1.5;
+      display: none;
+    }
+
+    .notification.success {
+      background: rgba(16, 185, 129, 0.1);
+      border: 1px solid rgba(16, 185, 129, 0.2);
+      color: #34d399;
+      display: block;
+    }
+
+    .notification.error {
+      background: rgba(239, 68, 68, 0.1);
+      border: 1px solid rgba(239, 68, 68, 0.2);
+      color: #f87171;
+      display: block;
+    }
+
+    .generated-info {
+      margin-top: 1.5rem;
+      background: rgba(255, 255, 255, 0.02);
+      border: 1px solid rgba(255, 255, 255, 0.05);
+      border-radius: 12px;
+      padding: 1rem;
+      font-size: 0.8rem;
+      display: none;
+    }
+
+    .info-row {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 0.5rem;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.03);
+      padding-bottom: 0.5rem;
+    }
+
+    .info-row:last-child {
+      margin-bottom: 0;
+      border-bottom: none;
+      padding-bottom: 0;
+    }
+
+    .info-label {
+      color: var(--text-muted);
+    }
+
+    .info-val {
+      font-family: monospace;
+      font-weight: 600;
+      color: var(--text);
+    }
+
+    .copy-btn {
+      background: transparent;
+      border: none;
+      color: var(--primary);
+      cursor: pointer;
+      font-size: 0.75rem;
+      font-weight: bold;
+      text-transform: uppercase;
+    }
+
+    .copy-btn:hover {
+      text-decoration: underline;
+    }
+
+    .footer-text {
+      text-align: center;
+      font-size: 0.7rem;
+      color: var(--text-muted);
+      margin-top: 1.5rem;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="glow-1"></div>
+  <div class="glow-2"></div>
+
+  <div class="container">
+    <div class="card">
+      <div class="header">
+        <div class="shield-icon">
+          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-shield-alert"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><line x1="12" x2="12" y1="8" y2="12"/><line x1="12" x2="12.01" y1="16" y2="16"/></svg>
+        </div>
+        <h1>Criador de Administradores</h1>
+        <p class="subtitle">Insira a chave mestra de segurança para gerar uma nova credencial administrativa no banco de dados.</p>
+      </div>
+
+      <form id="genForm">
+        <!-- Backend API Server URL -->
+        <div class="form-group">
+          <label for="apiUrl">URL da API</label>
+          <input type="url" id="apiUrl" value="http://ec2-54-209-111-28.compute-1.amazonaws.com/express-api" required>
+        </div>
+
+        <!-- Master Key -->
+        <div class="form-group">
+          <label for="masterKey">Chave Mestra de Segurança</label>
+          <input type="password" id="masterKey" placeholder="••••••••" value="banda_super_secret_master_key_2026" required>
+        </div>
+
+        <!-- Admin Name -->
+        <div class="form-group">
+          <label for="adminName">Nome do Novo Administrador</label>
+          <input type="text" id="adminName" placeholder="Ex: Mariana Maciel" required>
+        </div>
+
+        <!-- Admin Email -->
+        <div class="form-group">
+          <label for="adminEmail">Email de Acesso</label>
+          <input type="email" id="adminEmail" placeholder="admin@exemplo.com" required>
+        </div>
+
+        <!-- Admin Password -->
+        <div class="form-group">
+          <label for="adminPassword">Senha de Acesso</label>
+          <input type="password" id="adminPassword" placeholder="Insira a senha desejada" required>
+        </div>
+
+        <button type="submit" id="submitBtn" class="btn-submit">Gerar Acesso Admin</button>
+      </form>
+
+      <!-- Alert messages -->
+      <div id="notification" class="notification"></div>
+
+      <!-- Generated Credentials Detail -->
+      <div id="generatedDetail" class="generated-info">
+        <div class="info-row">
+          <span class="info-label">Nome:</span>
+          <span class="info-val" id="valName"></span>
+        </div>
+        <div class="info-row">
+          <span class="info-label">Email:</span>
+          <span class="info-val" id="valEmail"></span>
+        </div>
+        <div class="info-row">
+          <span class="info-label">Senha:</span>
+          <span class="info-val" id="valPass"></span>
+        </div>
+        <div style="text-align: right; margin-top: 0.5rem;">
+          <button class="copy-btn" id="copyBtn">Copiar Credenciais</button>
+        </div>
+      </div>
+    </div>
+
+    <p class="footer-text">Mariana Maciel • Segurança de Sistema & Autenticação Estrita</p>
+  </div>
+
+  <script>
+    const form = document.getElementById('genForm');
+    const submitBtn = document.getElementById('submitBtn');
+    const notification = document.getElementById('notification');
+    const generatedDetail = document.getElementById('generatedDetail');
+
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      
+      const apiUrl = document.getElementById('apiUrl').value.trim();
+      const masterKey = document.getElementById('masterKey').value;
+      const name = document.getElementById('adminName').value.trim();
+      const email = document.getElementById('adminEmail').value.trim();
+      const password = document.getElementById('adminPassword').value;
+
+      // Reset UI
+      notification.className = 'notification';
+      notification.style.display = 'none';
+      generatedDetail.style.display = 'none';
+      submitBtn.disabled = true;
+      submitBtn.textContent = 'Processando e gravando...';
+
+      try {
+        const response = await fetch(`${apiUrl}/api/auth/register-admin-master`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({
+            name,
+            email,
+            password,
+            masterKey
+          })
+        });
+
+        const data = await response.json();
+
+        if (response.ok) {
+          notification.textContent = 'Acesso administrativo criado com sucesso e gravado!';
+          notification.className = 'notification success';
+          
+          document.getElementById('valName').textContent = name;
+          document.getElementById('valEmail').textContent = email;
+          document.getElementById('valPass').textContent = password;
+          
+          generatedDetail.style.display = 'block';
+        } else {
+          throw new Error(data.message || 'Erro inesperado ao gerar admin.');
+        }
+      } catch (err) {
+        notification.textContent = err.message;
+        notification.className = 'notification error';
+      } finally {
+        submitBtn.disabled = false;
+        submitBtn.textContent = 'Gerar Acesso Admin';
+      }
+    });
+
+    document.getElementById('copyBtn').addEventListener('click', () => {
+      const name = document.getElementById('valName').textContent;
+      const email = document.getElementById('valEmail').textContent;
+      const pass = document.getElementById('valPass').textContent;
+      
+      const text = `Credenciais Admin:\nNome: ${name}\nEmail: ${email}\nSenha: ${pass}`;
+      navigator.clipboard.writeText(text);
+      alert('Credenciais copiadas para a área de transferência!');
+    });
+  </script>
+</body>
+</html>
