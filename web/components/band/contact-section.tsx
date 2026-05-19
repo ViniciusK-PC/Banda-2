@@ -201,18 +201,17 @@ export function ContactSection({ settings }: ContactSectionProps) {
                   <Input
                     id="name"
                     type="text"
-                    placeholder={isLoggedIn ? "Seu nome" : "Faça login para preencher"}
+                    placeholder="Seu nome completo"
                     value={formData.name}
                     onChange={(e) => {
                       if (!isLoggedIn) {
-                        toast.error('Você precisa estar logado para preencher os dados. Redirecionando...')
+                        toast.error('Você precisa estar logado para entrar em contato. Redirecionando...')
                         router.push('/login')
                       } else {
                         setFormData({ ...formData, name: e.target.value })
                       }
                     }}
-                    disabled={isLoggedIn}
-                    className={`bg-secondary ${isLoggedIn ? 'opacity-75 cursor-not-allowed text-muted-foreground' : 'border-dashed border-primary/40'}`}
+                    className="bg-secondary border-border"
                     required
                   />
                 </div>
@@ -223,18 +222,17 @@ export function ContactSection({ settings }: ContactSectionProps) {
                   <Input
                     id="email"
                     type="email"
-                    placeholder={isLoggedIn ? "seu@email.com" : "Faça login para preencher"}
+                    placeholder="seu@email.com"
                     value={formData.email}
                     onChange={(e) => {
                       if (!isLoggedIn) {
-                        toast.error('Você precisa estar logado para preencher os dados. Redirecionando...')
+                        toast.error('Você precisa estar logado para entrar em contato. Redirecionando...')
                         router.push('/login')
                       } else {
                         setFormData({ ...formData, email: e.target.value })
                       }
                     }}
-                    disabled={isLoggedIn}
-                    className={`bg-secondary ${isLoggedIn ? 'opacity-75 cursor-not-allowed text-muted-foreground' : 'border-dashed border-primary/40'}`}
+                    className="bg-secondary border-border"
                     required
                   />
                 </div>
