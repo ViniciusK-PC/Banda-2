@@ -41,7 +41,18 @@ export default function AdminPage() {
 
   // Bulk selection states
   const [selectedMedia, setSelectedMedia] = useState<Set<string>>(new Set())
+  const [selectedShows, setSelectedShows] = useState<Set<string>>(new Set())
+  const [selectedAlbums, setSelectedAlbums] = useState<Set<string>>(new Set())
+  const [selectedMessages, setSelectedMessages] = useState<Set<string>>(new Set())
   const [bulkDeleting, setBulkDeleting] = useState(false)
+
+  // Clear selections when active tab changes
+  useEffect(() => {
+    setSelectedMedia(new Set())
+    setSelectedShows(new Set())
+    setSelectedAlbums(new Set())
+    setSelectedMessages(new Set())
+  }, [activeTab])
 
   // Album modal states
   const [albumModal, setAlbumModal] = useState(false)
@@ -707,24 +718,134 @@ export default function AdminPage() {
             </button>
           </div>
 
-          <div>
+          <div className="flex flex-wrap items-center gap-2 w-full sm:w-auto mt-2 sm:mt-0 justify-end">
             {activeTab === 'shows' && (
-              <Button onClick={openNewShowModal} className="w-full sm:w-auto bg-primary text-primary-foreground cursor-pointer shadow-lg hover:shadow-primary/20">
-                <Plus className="w-4 h-4 mr-2" />
-                Novo Show
-              </Button>
+              <>
+                {selectedShows.size > 0 && (
+                  <Button 
+                    disabled={bulkDeleting}
+                    onClick={async () => {
+                      if (!confirm(`Tem certeza que deseja excluir ${selectedShows.size} ${selectedShows.size === 1 ? 'show' : 'shows'}? Esta ação não pode ser desfeita.`)) return
+                      try {
+                        setBulkDeleting(true)
+                        const ids = Array.from(selectedShows)
+                        await Promise.all(ids.map(id => apiShows.delete(id)))
+                        toast.success(`${ids.length} ${ids.length === 1 ? 'show excluído' : 'shows excluídos'} com sucesso!`)
+                        setSelectedShows(new Set())
+                        fetchShows()
+                      } catch (err: any) {
+                        toast.error('Erro ao excluir shows selecionados.')
+                      } finally {
+                        setBulkDeleting(false)
+                      }
+                    }}
+                    variant="destructive"
+                    className="w-full sm:w-auto cursor-pointer shadow-lg"
+                  >
+                    {bulkDeleting ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Trash2 className="w-4 h-4 mr-2" />}
+                    Excluir Selecionados ({selectedShows.size})
+                  </Button>
+                )}
+                <Button onClick={openNewShowModal} className="w-full sm:w-auto bg-primary text-primary-foreground cursor-pointer shadow-lg hover:shadow-primary/20">
+                  <Plus className="w-4 h-4 mr-2" />
+                  Novo Show
+                </Button>
+              </>
             )}
             {activeTab === 'media' && (
-              <Button onClick={openNewMediaModal} className="w-full sm:w-auto bg-primary text-primary-foreground cursor-pointer shadow-lg hover:shadow-primary/20">
-                <Plus className="w-4 h-4 mr-2" />
-                Nova Mídia
-              </Button>
+              <>
+                {selectedMedia.size > 0 && (
+                  <Button 
+                    disabled={bulkDeleting}
+                    onClick={async () => {
+                      if (!confirm(`Tem certeza que deseja excluir ${selectedMedia.size} ${selectedMedia.size === 1 ? 'mídia' : 'mídias'}? Esta ação não pode ser desfeita.`)) return
+                      try {
+                        setBulkDeleting(true)
+                        const ids = Array.from(selectedMedia)
+                        await Promise.all(ids.map(id => apiMedia.delete(id)))
+                        toast.success(`${ids.length} ${ids.length === 1 ? 'mídia excluída' : 'mídias excluídas'} com sucesso!`)
+                        setSelectedMedia(new Set())
+                        fetchMedia()
+                      } catch (err: any) {
+                        toast.error('Erro ao excluir mídias selecionadas.')
+                      } finally {
+                        setBulkDeleting(false)
+                      }
+                    }}
+                    variant="destructive"
+                    className="w-full sm:w-auto cursor-pointer shadow-lg"
+                  >
+                    {bulkDeleting ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Trash2 className="w-4 h-4 mr-2" />}
+                    Excluir Selecionadas ({selectedMedia.size})
+                  </Button>
+                )}
+                <Button onClick={openNewMediaModal} className="w-full sm:w-auto bg-primary text-primary-foreground cursor-pointer shadow-lg hover:shadow-primary/20">
+                  <Plus className="w-4 h-4 mr-2" />
+                  Nova Mídia
+                </Button>
+              </>
             )}
             {activeTab === 'music' && (
-              <Button onClick={openNewAlbumModal} className="w-full sm:w-auto bg-primary text-primary-foreground cursor-pointer shadow-lg hover:shadow-primary/20">
-                <Plus className="w-4 h-4 mr-2" />
-                Novo Álbum
-              </Button>
+              <>
+                {selectedAlbums.size > 0 && (
+                  <Button 
+                    disabled={bulkDeleting}
+                    onClick={async () => {
+                      if (!confirm(`Tem certeza que deseja excluir ${selectedAlbums.size} ${selectedAlbums.size === 1 ? 'álbum' : 'álbuns'}? Esta ação não pode ser desfeita.`)) return
+                      try {
+                        setBulkDeleting(true)
+                        const ids = Array.from(selectedAlbums)
+                        await Promise.all(ids.map(id => apiAlbums.delete(id)))
+                        toast.success(`${ids.length} ${ids.length === 1 ? 'álbum excluído' : 'álbuns excluídos'} com sucesso!`)
+                        setSelectedAlbums(new Set())
+                        fetchAlbums()
+                      } catch (err: any) {
+                        toast.error('Erro ao excluir álbuns selecionados.')
+                      } finally {
+                        setBulkDeleting(false)
+                      }
+                    }}
+                    variant="destructive"
+                    className="w-full sm:w-auto cursor-pointer shadow-lg"
+                  >
+                    {bulkDeleting ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Trash2 className="w-4 h-4 mr-2" />}
+                    Excluir Selecionados ({selectedAlbums.size})
+                  </Button>
+                )}
+                <Button onClick={openNewAlbumModal} className="w-full sm:w-auto bg-primary text-primary-foreground cursor-pointer shadow-lg hover:shadow-primary/20">
+                  <Plus className="w-4 h-4 mr-2" />
+                  Novo Álbum
+                </Button>
+              </>
+            )}
+            {activeTab === 'messages' && (
+              <>
+                {selectedMessages.size > 0 && (
+                  <Button 
+                    disabled={bulkDeleting}
+                    onClick={async () => {
+                      if (!confirm(`Tem certeza que deseja excluir ${selectedMessages.size} ${selectedMessages.size === 1 ? 'mensagem' : 'mensagens'}? Esta ação não pode ser desfeita.`)) return
+                      try {
+                        setBulkDeleting(true)
+                        const ids = Array.from(selectedMessages)
+                        await Promise.all(ids.map(id => apiMessages.delete(id)))
+                        toast.success(`${ids.length} ${ids.length === 1 ? 'mensagem excluída' : 'mensagens excluídas'} com sucesso!`)
+                        setSelectedMessages(new Set())
+                        fetchMessages()
+                      } catch (err: any) {
+                        toast.error('Erro ao excluir mensagens selecionadas.')
+                      } finally {
+                        setBulkDeleting(false)
+                      }
+                    }}
+                    variant="destructive"
+                    className="w-full sm:w-auto cursor-pointer shadow-lg animate-fade-in"
+                  >
+                    {bulkDeleting ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Trash2 className="w-4 h-4 mr-2" />}
+                    Excluir Selecionadas ({selectedMessages.size})
+                  </Button>
+                )}
+              </>
             )}
           </div>
         </div>
@@ -748,92 +869,182 @@ export default function AdminPage() {
                 </Button>
               </div>
             ) : (
-              <div className="overflow-x-auto">
-                <table className="w-full text-left border-collapse">
-                  <thead>
-                    <tr className="border-b border-border/80 text-xs font-semibold uppercase tracking-wider text-muted-foreground bg-secondary/20">
-                      <th className="p-4 pl-6">Data & Hora</th>
-                      <th className="p-4">Local (Venue)</th>
-                      <th className="p-4">Cidade / Estado</th>
-                      <th className="p-4">Status</th>
-                      <th className="p-4">Ingressos</th>
-                      <th className="p-4 pr-6 text-right">Ações</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-border/60 text-sm">
-                    {shows.map((show) => {
-                      let statusBadge = ''
-                      if (show.status === 'CONFIRMADO') {
-                        statusBadge = 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20'
-                      } else if (show.status === 'CANCELADO') {
-                        statusBadge = 'bg-rose-500/10 text-rose-400 border border-rose-500/20'
-                      } else {
-                        statusBadge = 'bg-zinc-500/10 text-zinc-400 border border-zinc-500/20'
-                      }
+              <div>
+                {/* Bulk Action Toolbar */}
+                {selectedShows.size > 0 && (
+                  <div className="flex flex-wrap items-center justify-between gap-3 bg-secondary/20 border-b border-border/50 px-6 py-3">
+                    <div className="flex items-center gap-3">
+                      <span className="text-xs bg-primary/15 text-primary px-2.5 py-0.5 rounded-full font-semibold">
+                        {selectedShows.size} {selectedShows.size === 1 ? 'show selecionado' : 'shows selecionados'}
+                      </span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <button
+                        onClick={() => setSelectedShows(new Set())}
+                        className="flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground transition-colors cursor-pointer px-3 py-1.5 rounded-lg bg-secondary/60 hover:bg-secondary"
+                      >
+                        <XIcon className="w-3.5 h-3.5" />
+                        Limpar seleção
+                      </button>
+                      <button
+                        disabled={bulkDeleting}
+                        onClick={async () => {
+                          if (!confirm(`Tem certeza que deseja excluir ${selectedShows.size} ${selectedShows.size === 1 ? 'show' : 'shows'}? Esta ação não pode ser desfeita.`)) return
+                          try {
+                            setBulkDeleting(true)
+                            const ids = Array.from(selectedShows)
+                            await Promise.all(ids.map(id => apiShows.delete(id)))
+                            toast.success(`${ids.length} ${ids.length === 1 ? 'show excluído' : 'shows excluídos'} com sucesso!`)
+                            setSelectedShows(new Set())
+                            fetchShows()
+                          } catch (err: any) {
+                            toast.error('Erro ao excluir shows selecionados.')
+                          } finally {
+                            setBulkDeleting(false)
+                          }
+                        }}
+                        className="flex items-center gap-1.5 text-xs font-semibold text-white bg-destructive hover:bg-destructive/80 transition-colors cursor-pointer px-3 py-1.5 rounded-lg disabled:opacity-60 disabled:cursor-not-allowed"
+                      >
+                        {bulkDeleting ? (
+                          <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                        ) : (
+                          <Trash2 className="w-3.5 h-3.5" />
+                        )}
+                        {bulkDeleting ? 'Excluindo...' : `Excluir Selecionados (${selectedShows.size})`}
+                      </button>
+                    </div>
+                  </div>
+                )}
 
-                      return (
-                        <tr key={show._id} className="hover:bg-secondary/15 transition-colors">
-                          <td className="p-4 pl-6 font-medium">
-                            <div className="flex items-center gap-2">
-                              <Calendar className="w-4 h-4 text-primary shrink-0" />
-                              <span>{formatDateString(show.date)}</span>
-                              <span className="text-xs text-muted-foreground ml-1.5 flex items-center gap-0.5">
-                                <Clock className="w-3 h-3" />
-                                {formatTimeString(show.date)}
+                <div className="overflow-x-auto">
+                  <table className="w-full text-left border-collapse">
+                    <thead>
+                      <tr className="border-b border-border/80 text-xs font-semibold uppercase tracking-wider text-muted-foreground bg-secondary/20">
+                        <th className="p-4 pl-6 w-12 text-center">
+                          <div className="flex justify-center">
+                            <div
+                              onClick={() => {
+                                if (selectedShows.size === shows.length) {
+                                  setSelectedShows(new Set())
+                                } else {
+                                  setSelectedShows(new Set(shows.map(s => s._id)))
+                                }
+                              }}
+                              className={`w-4 h-4 rounded border flex items-center justify-center shrink-0 transition-all cursor-pointer ${
+                                selectedShows.size === shows.length && shows.length > 0
+                                  ? 'bg-primary border-primary text-white shadow-sm' 
+                                  : 'border-border bg-black/40 hover:border-primary/60 text-transparent'
+                              }`}
+                              title={selectedShows.size === shows.length ? 'Desmarcar todos' : 'Selecionar todos'}
+                            >
+                              <Check className="w-2.5 h-2.5 stroke-[3]" />
+                            </div>
+                          </div>
+                        </th>
+                        <th className="p-4">Data & Hora</th>
+                        <th className="p-4">Local (Venue)</th>
+                        <th className="p-4">Cidade / Estado</th>
+                        <th className="p-4">Status</th>
+                        <th className="p-4">Ingressos</th>
+                        <th className="p-4 pr-6 text-right">Ações</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-border/60 text-sm">
+                      {shows.map((show) => {
+                        const isSelected = selectedShows.has(show._id)
+                        let statusBadge = ''
+                        if (show.status === 'CONFIRMADO') {
+                          statusBadge = 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20'
+                        } else if (show.status === 'CANCELADO') {
+                          statusBadge = 'bg-rose-500/10 text-rose-400 border border-rose-500/20'
+                        } else {
+                          statusBadge = 'bg-zinc-500/10 text-zinc-400 border border-zinc-500/20'
+                        }
+
+                        return (
+                          <tr key={show._id} className={`hover:bg-secondary/15 transition-colors ${isSelected ? 'bg-primary/5' : ''}`}>
+                            <td className="p-4 pl-6 text-center">
+                              <div className="flex justify-center">
+                                <div
+                                  onClick={() => {
+                                    const next = new Set(selectedShows)
+                                    if (next.has(show._id)) next.delete(show._id)
+                                    else next.add(show._id)
+                                    setSelectedShows(next)
+                                  }}
+                                  className={`w-4 h-4 rounded border flex items-center justify-center shrink-0 transition-all cursor-pointer ${
+                                    isSelected 
+                                      ? 'bg-primary border-primary text-white shadow-sm' 
+                                      : 'border-border bg-black/40 hover:border-primary/60 text-transparent'
+                                  }`}
+                                  title={isSelected ? 'Desmarcar show' : 'Selecionar show'}
+                                >
+                                  <Check className="w-2.5 h-2.5 stroke-[3]" />
+                                </div>
+                              </div>
+                            </td>
+                            <td className="p-4 font-medium">
+                              <div className="flex items-center gap-2">
+                                <Calendar className="w-4 h-4 text-primary shrink-0" />
+                                <span>{formatDateString(show.date)}</span>
+                                <span className="text-xs text-muted-foreground ml-1.5 flex items-center gap-0.5">
+                                  <Clock className="w-3 h-3" />
+                                  {formatTimeString(show.date)}
+                                </span>
+                              </div>
+                            </td>
+                            <td className="p-4 font-semibold">{show.venue}</td>
+                            <td className="p-4 text-muted-foreground">
+                              <div className="flex items-center gap-1.5">
+                                <MapPin className="w-3.5 h-3.5 text-primary/80" />
+                                <span>{show.city}, {show.state}</span>
+                                {show.country && show.country !== 'Brasil' && (
+                                  <span className="text-xs px-1.5 py-0.5 rounded bg-secondary text-foreground uppercase">{show.country}</span>
+                                )}
+                              </div>
+                            </td>
+                            <td className="p-4">
+                              <span className={`text-xs px-2.5 py-1 rounded-full font-medium ${statusBadge}`}>
+                                {show.status}
                               </span>
-                            </div>
-                          </td>
-                          <td className="p-4 font-semibold">{show.venue}</td>
-                          <td className="p-4 text-muted-foreground">
-                            <div className="flex items-center gap-1.5">
-                              <MapPin className="w-3.5 h-3.5 text-primary/80" />
-                              <span>{show.city}, {show.state}</span>
-                              {show.country && show.country !== 'Brasil' && (
-                                <span className="text-xs px-1.5 py-0.5 rounded bg-secondary text-foreground uppercase">{show.country}</span>
+                            </td>
+                            <td className="p-4">
+                              {show.ticketLink ? (
+                                <a 
+                                  href={show.ticketLink} 
+                                  target="_blank" 
+                                  rel="noreferrer"
+                                  className="text-xs text-primary hover:underline inline-flex items-center gap-1 font-medium"
+                                >
+                                  <Ticket className="w-3.5 h-3.5" />
+                                  Ver Link
+                                </a>
+                              ) : (
+                                <span className="text-xs text-muted-foreground">Sem Link</span>
                               )}
-                            </div>
-                          </td>
-                          <td className="p-4">
-                            <span className={`text-xs px-2.5 py-1 rounded-full font-medium ${statusBadge}`}>
-                              {show.status}
-                            </span>
-                          </td>
-                          <td className="p-4">
-                            {show.ticketLink ? (
-                              <a 
-                                href={show.ticketLink} 
-                                target="_blank" 
-                                rel="noreferrer"
-                                className="text-xs text-primary hover:underline inline-flex items-center gap-1 font-medium"
+                            </td>
+                            <td className="p-4 pr-6 text-right space-x-2">
+                              <button
+                                onClick={() => openEditShowModal(show)}
+                                className="p-2 rounded-lg bg-secondary/50 hover:bg-primary/20 hover:text-primary transition-all cursor-pointer text-muted-foreground"
+                                title="Editar"
                               >
-                                <Ticket className="w-3.5 h-3.5" />
-                                Ver Link
-                              </a>
-                            ) : (
-                              <span className="text-xs text-muted-foreground">Sem Link</span>
-                            )}
-                          </td>
-                          <td className="p-4 pr-6 text-right space-x-2">
-                            <button
-                              onClick={() => openEditShowModal(show)}
-                              className="p-2 rounded-lg bg-secondary/50 hover:bg-primary/20 hover:text-primary transition-all cursor-pointer text-muted-foreground"
-                              title="Editar"
-                            >
-                              <Edit2 className="w-4 h-4" />
-                            </button>
-                            <button
-                              onClick={() => handleDeleteShow(show._id, show.venue)}
-                              className="p-2 rounded-lg bg-secondary/50 hover:bg-destructive/20 hover:text-destructive transition-all cursor-pointer text-muted-foreground"
-                              title="Excluir"
-                            >
-                              <Trash2 className="w-4 h-4" />
-                            </button>
-                          </td>
-                        </tr>
-                      )
-                    })}
-                  </tbody>
-                </table>
+                                <Edit2 className="w-4 h-4" />
+                              </button>
+                              <button
+                                onClick={() => handleDeleteShow(show._id, show.venue)}
+                                className="p-2 rounded-lg bg-secondary/50 hover:bg-destructive/20 hover:text-destructive transition-all cursor-pointer text-muted-foreground"
+                                title="Excluir"
+                              >
+                                <Trash2 className="w-4 h-4" />
+                              </button>
+                            </td>
+                          </tr>
+                        )
+                      })}
+                    </tbody>
+                  </table>
+                </div>
               </div>
             )}
           </div>
@@ -861,9 +1072,9 @@ export default function AdminPage() {
               <div className="p-6 space-y-4">
 
                 {/* Bulk Action Toolbar */}
-                <div className="flex flex-wrap items-center justify-between gap-3 bg-secondary/20 border border-border/50 rounded-2xl px-4 py-2.5">
+                <div className="flex flex-wrap items-center justify-between gap-3 bg-secondary/10 border border-border/40 rounded-2xl px-5 py-3">
                   <div className="flex items-center gap-3">
-                    <button
+                    <div
                       onClick={() => {
                         if (selectedMedia.size === media.length) {
                           setSelectedMedia(new Set())
@@ -871,18 +1082,21 @@ export default function AdminPage() {
                           setSelectedMedia(new Set(media.map(m => m._id)))
                         }
                       }}
-                      className="flex items-center gap-2 text-sm font-medium text-foreground hover:text-primary transition-colors cursor-pointer"
+                      className={`w-5 h-5 rounded border flex items-center justify-center shrink-0 transition-all cursor-pointer ${
+                        selectedMedia.size === media.length && media.length > 0
+                          ? 'bg-primary border-primary text-white shadow-md shadow-primary/20' 
+                          : 'border-border/80 bg-black/40 hover:border-primary/60 text-transparent'
+                      }`}
+                      title={selectedMedia.size === media.length ? 'Desmarcar todas' : 'Selecionar todas'}
                     >
-                      {selectedMedia.size === media.length && media.length > 0 ? (
-                        <CheckSquare className="w-4 h-4 text-primary" />
-                      ) : (
-                        <Square className="w-4 h-4 text-muted-foreground" />
-                      )}
+                      <Check className="w-3 h-3 stroke-[3]" />
+                    </div>
+                    <span className="text-sm font-medium text-foreground">
                       {selectedMedia.size === media.length && media.length > 0 ? 'Desmarcar Tudo' : 'Selecionar Tudo'}
-                    </button>
+                    </span>
 
                     {selectedMedia.size > 0 && (
-                      <span className="text-xs bg-primary/15 text-primary px-2 py-0.5 rounded-full font-semibold">
+                      <span className="text-xs bg-primary/15 text-primary px-2.5 py-0.5 rounded-full font-semibold">
                         {selectedMedia.size} {selectedMedia.size === 1 ? 'selecionada' : 'selecionadas'}
                       </span>
                     )}
@@ -974,26 +1188,22 @@ export default function AdminPage() {
                           </span>
 
                           {/* Checkbox overlay */}
-                          <button
+                          <div
                             onClick={() => {
                               const next = new Set(selectedMedia)
                               if (next.has(m._id)) next.delete(m._id)
                               else next.add(m._id)
                               setSelectedMedia(next)
                             }}
-                            className={`absolute top-3 right-3 w-6 h-6 rounded-md flex items-center justify-center transition-all cursor-pointer ${
+                            className={`absolute top-3 right-3 w-5 h-5 rounded flex items-center justify-center transition-all cursor-pointer border ${
                               isSelected
-                                ? 'bg-primary text-white shadow-lg shadow-primary/30'
-                                : 'bg-black/50 text-white/70 opacity-0 group-hover:opacity-100 hover:bg-primary/80'
+                                ? 'bg-primary border-primary text-white shadow-lg shadow-primary/30'
+                                : 'bg-black/50 border-white/20 text-transparent opacity-0 group-hover:opacity-100 hover:border-primary/85'
                             }`}
                             title={isSelected ? 'Desmarcar' : 'Selecionar'}
                           >
-                            {isSelected ? (
-                              <CheckSquare className="w-4 h-4" />
-                            ) : (
-                              <Square className="w-4 h-4" />
-                            )}
-                          </button>
+                            <Check className="w-3 h-3 stroke-[3]" />
+                          </div>
 
                           {/* Selected overlay tint */}
                           {isSelected && (
@@ -1063,47 +1273,140 @@ export default function AdminPage() {
               </div>
             ) : (
               <div className="p-6 space-y-4">
-                {albums.map((album) => (
-                  <div key={album._id} className="bg-card/40 border border-border/60 rounded-2xl p-5 flex flex-col sm:flex-row sm:items-center gap-4 hover:border-primary/40 transition-colors">
-                    {/* Cover */}
-                    <div className="w-16 h-16 rounded-xl bg-secondary border border-border/60 overflow-hidden shrink-0 flex items-center justify-center">
-                      {album.coverUrl ? (
-                        <img src={album.coverUrl} alt={album.title} className="w-full h-full object-cover" onError={(e) => { (e.target as HTMLImageElement).style.display = 'none' }} />
-                      ) : (
-                        <Disc3 className="w-7 h-7 text-primary/40" />
-                      )}
+                {/* Bulk Action Toolbar */}
+                <div className="flex flex-wrap items-center justify-between gap-3 bg-secondary/10 border border-border/40 rounded-2xl px-5 py-3">
+                  <div className="flex items-center gap-3">
+                    <div
+                      onClick={() => {
+                        if (selectedAlbums.size === albums.length) {
+                          setSelectedAlbums(new Set())
+                        } else {
+                          setSelectedAlbums(new Set(albums.map(a => a._id)))
+                        }
+                      }}
+                      className={`w-5 h-5 rounded border flex items-center justify-center shrink-0 transition-all cursor-pointer ${
+                        selectedAlbums.size === albums.length && albums.length > 0
+                          ? 'bg-primary border-primary text-white shadow-md shadow-primary/20' 
+                          : 'border-border/80 bg-black/40 hover:border-primary/60 text-transparent'
+                      }`}
+                      title={selectedAlbums.size === albums.length ? 'Desmarcar todos' : 'Selecionar todos'}
+                    >
+                      <Check className="w-3 h-3 stroke-[3]" />
                     </div>
-                    {/* Info */}
-                    <div className="flex-1 min-w-0">
-                      <h4 className="font-semibold text-base">{album.title}</h4>
-                      <div className="flex flex-wrap gap-3 mt-1 text-xs text-muted-foreground">
-                        <span className="flex items-center gap-1"><Clock className="w-3 h-3" />{album.year}</span>
-                        <span className="flex items-center gap-1"><Music className="w-3 h-3" />{album.tracks.length} {album.tracks.length === 1 ? 'faixa' : 'faixas'}</span>
-                        {album.spotifyUrl && <span className="text-green-400">Spotify ✓</span>}
-                        {album.appleMusicUrl && <span className="text-pink-400">Apple Music ✓</span>}
-                        {album.deezerUrl && <span className="text-purple-400">Deezer ✓</span>}
-                        {album.youtubeMusicUrl && <span className="text-red-400">YouTube Music ✓</span>}
+                    <span className="text-sm font-medium text-foreground">
+                      {selectedAlbums.size === albums.length && albums.length > 0 ? 'Desmarcar Tudo' : 'Selecionar Tudo'}
+                    </span>
+
+                    {selectedAlbums.size > 0 && (
+                      <span className="text-xs bg-primary/15 text-primary px-2.5 py-0.5 rounded-full font-semibold">
+                        {selectedAlbums.size} {selectedAlbums.size === 1 ? 'selecionado' : 'selecionados'}
+                      </span>
+                    )}
+                  </div>
+
+                  <div className="flex items-center gap-2">
+                    {selectedAlbums.size > 0 && (
+                      <>
+                        <button
+                          onClick={() => setSelectedAlbums(new Set())}
+                          className="flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground transition-colors cursor-pointer px-3 py-1.5 rounded-lg bg-secondary/60 hover:bg-secondary"
+                        >
+                          <XIcon className="w-3.5 h-3.5" />
+                          Limpar seleção
+                        </button>
+                        <button
+                          disabled={bulkDeleting}
+                          onClick={async () => {
+                            if (!confirm(`Tem certeza que deseja excluir ${selectedAlbums.size} ${selectedAlbums.size === 1 ? 'álbum' : 'álbuns'}? Esta ação não pode ser desfeita.`)) return
+                            try {
+                              setBulkDeleting(true)
+                              const ids = Array.from(selectedAlbums)
+                              await Promise.all(ids.map(id => apiAlbums.delete(id)))
+                              toast.success(`${ids.length} ${ids.length === 1 ? 'álbum excluído' : 'álbuns excluídos'} com sucesso!`)
+                              setSelectedAlbums(new Set())
+                              fetchAlbums()
+                            } catch (err: any) {
+                              toast.error('Erro ao excluir álbuns selecionados.')
+                            } finally {
+                              setBulkDeleting(false)
+                            }
+                          }}
+                          className="flex items-center gap-1.5 text-xs font-semibold text-white bg-destructive hover:bg-destructive/80 transition-colors cursor-pointer px-3.5 py-1.5 rounded-lg disabled:opacity-60 disabled:cursor-not-allowed shadow-md hover:shadow-destructive/20"
+                        >
+                          {bulkDeleting ? (
+                            <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                          ) : (
+                            <Trash2 className="w-3.5 h-3.5" />
+                          )}
+                          {bulkDeleting ? 'Excluindo...' : `Excluir Selecionados (${selectedAlbums.size})`}
+                        </button>
+                      </>
+                    )}
+                  </div>
+                </div>
+
+                {albums.map((album) => {
+                  const isSelected = selectedAlbums.has(album._id)
+                  return (
+                    <div key={album._id} className={`bg-card/40 border rounded-2xl p-5 flex flex-col sm:flex-row sm:items-center gap-4 hover:border-primary/40 transition-colors ${isSelected ? 'border-primary shadow-primary/10 ring-1 ring-primary/20 bg-primary/5' : 'border-border/60'}`}>
+                      {/* Checkbox */}
+                      <div
+                        onClick={() => {
+                          const next = new Set(selectedAlbums)
+                          if (next.has(album._id)) next.delete(album._id)
+                          else next.add(album._id)
+                          setSelectedAlbums(next)
+                        }}
+                        className={`w-5 h-5 rounded border flex items-center justify-center shrink-0 transition-all cursor-pointer ${
+                          isSelected 
+                            ? 'bg-primary border-primary text-white shadow-sm' 
+                            : 'border-border bg-black/40 hover:border-primary/60 text-transparent'
+                        }`}
+                        title={isSelected ? 'Desmarcar álbum' : 'Selecionar álbum'}
+                      >
+                        <Check className="w-3 h-3 stroke-[3]" />
+                      </div>
+
+                      {/* Cover */}
+                      <div className="w-16 h-16 rounded-xl bg-secondary border border-border/60 overflow-hidden shrink-0 flex items-center justify-center">
+                        {album.coverUrl ? (
+                          <img src={album.coverUrl} alt={album.title} className="w-full h-full object-cover" onError={(e) => { (e.target as HTMLImageElement).style.display = 'none' }} />
+                        ) : (
+                          <Disc3 className="w-7 h-7 text-primary/40" />
+                        )}
+                      </div>
+                      {/* Info */}
+                      <div className="flex-1 min-w-0">
+                        <h4 className="font-semibold text-base">{album.title}</h4>
+                        <div className="flex flex-wrap gap-3 mt-1 text-xs text-muted-foreground">
+                          <span className="flex items-center gap-1"><Clock className="w-3 h-3" />{album.year}</span>
+                          <span className="flex items-center gap-1"><Music className="w-3 h-3" />{album.tracks.length} {album.tracks.length === 1 ? 'faixa' : 'faixas'}</span>
+                          {album.spotifyUrl && <span className="text-green-400">Spotify ✓</span>}
+                          {album.appleMusicUrl && <span className="text-pink-400">Apple Music ✓</span>}
+                          {album.deezerUrl && <span className="text-purple-400">Deezer ✓</span>}
+                          {album.youtubeMusicUrl && <span className="text-red-400">YouTube Music ✓</span>}
+                        </div>
+                      </div>
+                      {/* Actions */}
+                      <div className="flex gap-2 shrink-0">
+                        <button
+                          onClick={() => openEditAlbumModal(album)}
+                          className="p-2 rounded-xl bg-secondary/80 hover:bg-primary/20 hover:text-primary transition-all text-muted-foreground cursor-pointer"
+                          title="Editar álbum"
+                        >
+                          <Edit2 className="w-4 h-4" />
+                        </button>
+                        <button
+                          onClick={() => handleDeleteAlbum(album._id, album.title)}
+                          className="p-2 rounded-xl bg-secondary/80 hover:bg-destructive/20 hover:text-destructive transition-all text-muted-foreground cursor-pointer"
+                          title="Excluir álbum"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </button>
                       </div>
                     </div>
-                    {/* Actions */}
-                    <div className="flex gap-2 shrink-0">
-                      <button
-                        onClick={() => openEditAlbumModal(album)}
-                        className="p-2 rounded-xl bg-secondary/80 hover:bg-primary/20 hover:text-primary transition-all text-muted-foreground cursor-pointer"
-                        title="Editar álbum"
-                      >
-                        <Edit2 className="w-4 h-4" />
-                      </button>
-                      <button
-                        onClick={() => handleDeleteAlbum(album._id, album.title)}
-                        className="p-2 rounded-xl bg-secondary/80 hover:bg-destructive/20 hover:text-destructive transition-all text-muted-foreground cursor-pointer"
-                        title="Excluir álbum"
-                      >
-                        <Trash2 className="w-4 h-4" />
-                      </button>
-                    </div>
-                  </div>
-                ))}
+                  )
+                })}
               </div>
             )}
           </div>
@@ -1585,15 +1888,91 @@ export default function AdminPage() {
                 </div>
               ) : (
                 <div className="space-y-4">
+                  {/* Select All & Bulk Action Area */}
+                  <div className="flex flex-wrap items-center justify-between gap-3 bg-secondary/10 border border-border/40 rounded-2xl px-5 py-3">
+                    <div className="flex items-center gap-3">
+                      {/* Checkbox Geral */}
+                      <div
+                        onClick={() => {
+                          if (selectedMessages.size === messages.length) {
+                            setSelectedMessages(new Set())
+                          } else {
+                            setSelectedMessages(new Set(messages.map(m => m._id)))
+                          }
+                        }}
+                        className={`w-5 h-5 rounded border flex items-center justify-center shrink-0 transition-all cursor-pointer ${
+                          selectedMessages.size === messages.length && messages.length > 0
+                            ? 'bg-primary border-primary text-white shadow-md shadow-primary/20' 
+                            : 'border-border/80 bg-black/40 hover:border-primary/60 text-transparent'
+                        }`}
+                        title={selectedMessages.size === messages.length ? 'Desmarcar todos' : 'Selecionar todos'}
+                      >
+                        <Check className="w-3 h-3 stroke-[3]" />
+                      </div>
+                      <span className="text-sm font-medium text-foreground">
+                        {selectedMessages.size === messages.length && messages.length > 0 ? 'Desmarcar Tudo' : 'Selecionar Tudo'}
+                      </span>
+
+                      {selectedMessages.size > 0 && (
+                        <span className="text-xs bg-primary/15 text-primary px-2.5 py-0.5 rounded-full font-semibold">
+                          {selectedMessages.size} {selectedMessages.size === 1 ? 'selecionada' : 'selecionadas'}
+                        </span>
+                      )}
+                    </div>
+
+                    <div className="flex items-center gap-2">
+                      {selectedMessages.size > 0 && (
+                        <>
+                          <button
+                            onClick={() => setSelectedMessages(new Set())}
+                            className="flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground transition-colors cursor-pointer px-3 py-1.5 rounded-lg bg-secondary/60 hover:bg-secondary"
+                          >
+                            <XIcon className="w-3.5 h-3.5" />
+                            Limpar seleção
+                          </button>
+                          <button
+                            disabled={bulkDeleting}
+                            onClick={async () => {
+                              if (!confirm(`Tem certeza que deseja excluir ${selectedMessages.size} ${selectedMessages.size === 1 ? 'mensagem' : 'mensagens'}? Esta ação não pode ser desfeita.`)) return
+                              try {
+                                setBulkDeleting(true)
+                                const ids = Array.from(selectedMessages)
+                                await Promise.all(ids.map(id => apiMessages.delete(id)))
+                                toast.success(`${ids.length} ${ids.length === 1 ? 'mensagem excluída' : 'mensagens excluídas'} com sucesso!`)
+                                setSelectedMessages(new Set())
+                                fetchMessages()
+                              } catch (err: any) {
+                                toast.error('Erro ao excluir mensagens selecionadas.')
+                              } finally {
+                                setBulkDeleting(false)
+                              }
+                            }}
+                            className="flex items-center gap-1.5 text-xs font-semibold text-white bg-destructive hover:bg-destructive/80 transition-colors cursor-pointer px-3.5 py-1.5 rounded-lg disabled:opacity-60 disabled:cursor-not-allowed shadow-md hover:shadow-destructive/20"
+                          >
+                            {bulkDeleting ? (
+                              <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                            ) : (
+                              <Trash2 className="w-3.5 h-3.5" />
+                            )}
+                            {bulkDeleting ? 'Excluindo...' : `Excluir Selecionadas (${selectedMessages.size})`}
+                          </button>
+                        </>
+                      )}
+                    </div>
+                  </div>
+
                   {messages.map((message) => {
                     const isExpanded = expandedMessageId === message._id
+                    const isSelected = selectedMessages.has(message._id)
                     return (
                       <div 
                         key={message._id}
                         className={`border rounded-2xl transition-all overflow-hidden ${
-                          isExpanded 
-                            ? 'border-primary/60 bg-secondary/15 ring-1 ring-primary/20 shadow-md' 
-                            : 'border-border/60 bg-card/40 hover:border-primary/30 hover:bg-secondary/10'
+                          isSelected 
+                            ? 'border-primary bg-primary/5 ring-1 ring-primary/20 shadow-md' 
+                            : isExpanded 
+                              ? 'border-primary/60 bg-secondary/15 ring-1 ring-primary/20 shadow-md' 
+                              : 'border-border/60 bg-card/40 hover:border-primary/30 hover:bg-secondary/10'
                         }`}
                       >
                         {/* Header/Accordion Trigger */}
@@ -1610,9 +1989,28 @@ export default function AdminPage() {
                           }}
                           className="p-5 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 cursor-pointer select-none"
                         >
-                          <div className="flex items-start gap-3 min-w-0">
+                          <div className="flex items-center gap-4 min-w-0 w-full sm:w-auto">
+                            {/* Checkbox (styled div, click event stopped from propagating) */}
+                            <div
+                              onClick={(e) => {
+                                e.stopPropagation()
+                                const next = new Set(selectedMessages)
+                                if (next.has(message._id)) next.delete(message._id)
+                                else next.add(message._id)
+                                setSelectedMessages(next)
+                              }}
+                              className={`w-5 h-5 rounded border flex items-center justify-center shrink-0 transition-all cursor-pointer ${
+                                isSelected 
+                                  ? 'bg-primary border-primary text-white shadow-sm' 
+                                  : 'border-border bg-black/40 hover:border-primary/60 text-transparent'
+                              }`}
+                              title={isSelected ? 'Desmarcar mensagem' : 'Selecionar mensagem'}
+                            >
+                              <Check className="w-3 h-3 stroke-[3]" />
+                            </div>
+
                             {/* Unread Indicator dot */}
-                            <div className="mt-1.5 shrink-0">
+                            <div className="shrink-0 flex items-center">
                               {!message.read ? (
                                 <span className="relative flex h-2.5 w-2.5">
                                   <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-amber-400 opacity-75"></span>
@@ -1625,7 +2023,7 @@ export default function AdminPage() {
 
                             <div className="min-w-0">
                               <div className="flex items-center gap-2 flex-wrap">
-                                <h4 className={`font-semibold text-sm ${!message.read ? 'text-foreground' : 'text-muted-foreground'}`}>
+                                <h4 className={`font-semibold text-sm ${!message.read ? 'text-foreground font-bold' : 'text-muted-foreground'}`}>
                                   {message.name}
                                 </h4>
                                 <span className="text-xs text-muted-foreground">({message.email})</span>
@@ -1636,14 +2034,27 @@ export default function AdminPage() {
                             </div>
                           </div>
 
-                          <div className="flex items-center gap-3 shrink-0 ml-5 sm:ml-0">
+                          <div className="flex items-center gap-3 shrink-0 ml-9 sm:ml-0">
                             <span className="text-xs text-muted-foreground">
                               {formatDateString(message.createdAt)} às {formatTimeString(message.createdAt)}
                             </span>
                             <div className="h-4 w-px bg-border/60" />
-                            <span className="text-xs text-primary font-medium">
+                            <span className="text-xs text-primary font-medium hover:underline">
                               {isExpanded ? 'Recolher' : 'Ler mensagem'}
                             </span>
+                            <div className="h-4 w-px bg-border/60" />
+                            <button
+                              onClick={async (e) => {
+                                e.stopPropagation();
+                                if (confirm(`Deseja excluir a mensagem de ${message.name}?`)) {
+                                  await handleDeleteMessage(message._id);
+                                }
+                              }}
+                              className="p-1.5 rounded-lg bg-secondary/80 hover:bg-destructive/20 hover:text-destructive transition-all text-rose-400 cursor-pointer"
+                              title="Excluir mensagem"
+                            >
+                              <Trash2 className="w-3.5 h-3.5" />
+                            </button>
                           </div>
                         </div>
 
