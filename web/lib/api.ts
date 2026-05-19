@@ -80,6 +80,19 @@ export const apiAuth = {
     }
     return data;
   },
+
+  updateProfile: async (profileData: { name?: string; email?: string; password?: string }): Promise<{ message: string; user: User }> => {
+    const res = await fetch(`${getBaseUrl()}/api/auth/profile`, {
+      method: 'PUT',
+      headers: getHeaders(),
+      body: JSON.stringify(profileData),
+    });
+    const data = await res.json();
+    if (!res.ok) {
+      throw new Error(data.message || 'Erro ao atualizar perfil');
+    }
+    return data;
+  },
 };
 
 // --- SHOW TYPES & ENDPOINTS ---
@@ -419,6 +432,7 @@ export const apiMessages = {
 
   get: async (id: string): Promise<Message> => {
     const res = await fetch(`${getBaseUrl()}/api/messages/${id}`, {
+      headers: getHeaders(),
       cache: 'no-store',
     });
     if (!res.ok) throw new Error('Erro ao buscar ticket');

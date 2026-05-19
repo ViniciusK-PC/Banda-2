@@ -5,10 +5,10 @@ import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { 
   Music, LogOut, Loader2, ArrowRight, MessageSquare, AlertCircle, 
-  Clock, Plus, CheckCircle2, Ticket, Award, Disc, Tag, Send
+  Clock, Plus, CheckCircle2, Ticket, Award, Disc, Tag, Send, User as UserIcon, Edit, X
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
-import { apiMessages, apiShows, apiAlbums, Message, Show, Album } from '@/lib/api'
+import { apiMessages, apiShows, apiAlbums, apiAuth, Message, Show, Album } from '@/lib/api'
 import { toast } from 'sonner'
 
 export default function DashboardPage() {
@@ -31,6 +31,13 @@ export default function DashboardPage() {
   const [replyTexts, setReplyTexts] = useState<Record<string, string>>({})
   const [replyingIds, setReplyingIds] = useState<Record<string, boolean>>({})
 
+  // Edit Profile States
+  const [isEditingProfile, setIsEditingProfile] = useState(false)
+  const [editName, setEditName] = useState('')
+  const [editEmail, setEditEmail] = useState('')
+  const [editPassword, setEditPassword] = useState('')
+  const [updatingProfile, setUpdatingProfile] = useState(false)
+
   // Verification & Auth check
   useEffect(() => {
     if (typeof window !== 'undefined') {
@@ -50,6 +57,23 @@ export default function DashboardPage() {
       }
     }
   }, [router])
+
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const params = new URLSearchParams(window.location.search)
+      if (params.get('edit') === 'true') {
+        setIsEditingProfile(true)
+      }
+    }
+  }, [])
+
+  // Initialize edit fields when user state is loaded
+  useEffect(() => {
+    if (user) {
+      setEditName(user.name || '')
+      setEditEmail(user.email || '')
+    }
+  }, [user])
 
   // Fetch all Fan Area data
   const fetchTickets = async () => {
@@ -104,6 +128,35 @@ export default function DashboardPage() {
     localStorage.removeItem('banda_user')
     toast.success('Desconectado com sucesso.')
     router.push('/')
+  }
+
+  const handleSaveProfile = async (e: React.FormEvent) => {
+    e.preventDefault()
+    if (!editName.trim() || !editEmail.trim()) {
+      toast.error('Nome e e-mail são obrigatórios.')
+      return
+    }
+
+    try {
+      setUpdatingProfile(true)
+      const res = await apiAuth.updateProfile({
+        name: editName,
+        email: editEmail,
+        password: editPassword || undefined,
+      })
+
+      localStorage.setItem('banda_user', JSON.stringify(res.user))
+      setUser(res.user)
+      toast.success('Perfil atualizado com sucesso!')
+      setEditPassword('')
+      setIsEditingProfile(false)
+      router.push('/dashboard')
+    } catch (err: any) {
+      console.error(err)
+      toast.error(err.message || 'Erro ao atualizar perfil.')
+    } finally {
+      setUpdatingProfile(false)
+    }
   }
 
   const handleSendReply = async (ticketId: string) => {
@@ -501,6 +554,97 @@ export default function DashboardPage() {
         </div>
 
       </main>
+
+      {/* Floating Edit Profile Modal */}
+      {isEditingProfile && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md">
+          <div className="relative w-full max-w-md bg-card/95 border border-border p-8 rounded-3xl shadow-2xl overflow-hidden">
+            {/* Background decorative element */}
+            <div className="absolute -top-12 -right-12 w-32 h-32 bg-primary/10 rounded-full blur-2xl pointer-events-none" />
+            
+            <button 
+              onClick={() => {
+                setIsEditingProfile(false)
+                router.push('/dashboard')
+              }}
+              className="absolute top-4 right-4 text-muted-foreground hover:text-foreground cursor-pointer"
+            >
+              <X className="w-5 h-5" />
+            </button>
+
+            <div className="mx-auto w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center text-primary mb-5">
+              <Edit className="w-5 h-5" />
+            </div>
+
+            <h3 className="font-serif text-2xl font-bold mb-1 text-center">Editar Perfil</h3>
+            <p className="text-muted-foreground text-xs text-center mb-6 leading-relaxed">
+              Atualize as informações do seu perfil do Fã Clube Oficial.
+            </p>
+
+            <form onSubmit={handleSaveProfile} className="space-y-4">
+              <div>
+                <label className="block text-xs font-semibold text-muted-foreground mb-1.5">Nome Completo</label>
+                <input 
+                  type="text" 
+                  value={editName}
+                  onChange={(e) => setEditName(e.target.value)}
+                  className="w-full rounded-lg bg-secondary border border-border px-4 py-2.5 text-xs text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-primary"
+                  required
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-semibold text-muted-foreground mb-1.5">E-mail</label>
+                <input 
+                  type="email" 
+                  value={editEmail}
+                  onChange={(e) => setEditEmail(e.target.value)}
+                  className="w-full rounded-lg bg-secondary border border-border px-4 py-2.5 text-xs text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-primary"
+                  required
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-semibold text-muted-foreground mb-1.5">Nova Senha (Deixe em branco para manter)</label>
+                <input 
+                  type="password" 
+                  placeholder="Sua nova senha de acesso"
+                  value={editPassword}
+                  onChange={(e) => setEditPassword(e.target.value)}
+                  className="w-full rounded-lg bg-secondary border border-border px-4 py-2.5 text-xs text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-primary"
+                />
+              </div>
+
+              <div className="space-y-2 pt-2">
+                <Button 
+                  type="submit" 
+                  disabled={updatingProfile} 
+                  className="w-full bg-primary text-primary-foreground hover:bg-primary/90 font-semibold px-6 py-2.5 rounded-xl transition-all cursor-pointer shadow-lg shadow-primary/20 flex items-center justify-center"
+                >
+                  {updatingProfile ? (
+                    <>
+                      <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                      Salvando Alterações...
+                    </>
+                  ) : (
+                    'Salvar Alterações'
+                  )}
+                </Button>
+                <button 
+                  type="button"
+                  onClick={() => {
+                    setIsEditingProfile(false)
+                    router.push('/dashboard')
+                  }}
+                  className="w-full text-xs text-muted-foreground hover:text-foreground transition-all cursor-pointer py-2"
+                >
+                  Cancelar
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
     </div>
   )
 }

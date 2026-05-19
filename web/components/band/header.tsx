@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
-import { Menu, X, Music, Instagram, Youtube, Facebook } from 'lucide-react'
+import { Menu, X, Music, Instagram, Youtube, Facebook, User, Edit, LogOut } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { Settings } from '@/lib/api'
 import { toast } from 'sonner'
@@ -24,6 +24,7 @@ export function BandHeader({ settings }: BandHeaderProps) {
   const [isOpen, setIsOpen] = useState(false)
   const [scrolled, setScrolled] = useState(false)
   const [user, setUser] = useState<any>(null)
+  const [dropdownOpen, setDropdownOpen] = useState(false)
 
   useEffect(() => {
     const handleScroll = () => {
@@ -91,26 +92,50 @@ export function BandHeader({ settings }: BandHeaderProps) {
               </a>
             )}
             {user ? (
-              <div className="flex items-center gap-2.5">
-                <Link
-                  href={user.role === 'ADMIN' ? '/admin' : '/dashboard'}
-                  className="text-xs font-semibold text-foreground bg-primary/10 hover:bg-primary/20 border border-primary/30 hover:border-primary/50 px-4 py-2.5 rounded-xl transition-all cursor-pointer shadow-md shadow-primary/5 flex items-center gap-1.5"
+              <div className="relative">
+                <button
+                  onClick={() => setDropdownOpen(!dropdownOpen)}
+                  className="text-xs font-semibold text-foreground bg-primary/10 hover:bg-primary/20 border border-primary/30 hover:border-primary/50 px-4 py-2.5 rounded-xl transition-all cursor-pointer shadow-md shadow-primary/5 flex items-center gap-1.5 focus:outline-none"
                 >
                   <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
                   Olá, {user.name.split(' ')[0]} 👋
-                </Link>
-                <button
-                  onClick={() => {
-                    localStorage.removeItem('banda_token')
-                    localStorage.removeItem('banda_user')
-                    setUser(null)
-                    toast.success('Desconectado com sucesso.')
-                    window.location.reload()
-                  }}
-                  className="text-xs font-semibold text-muted-foreground hover:text-rose-400 bg-secondary/60 hover:bg-rose-500/10 border border-border/50 hover:border-rose-500/20 px-3.5 py-2.5 rounded-xl transition-all cursor-pointer"
-                >
-                  Sair
                 </button>
+                
+                {dropdownOpen && (
+                  <div className="absolute right-0 mt-2 w-48 bg-background/95 backdrop-blur-md border border-border rounded-2xl p-2 shadow-2xl z-50 flex flex-col gap-1">
+                    <Link
+                      href={user.role?.toUpperCase() === 'ADMIN' ? '/admin' : '/dashboard'}
+                      onClick={() => setDropdownOpen(false)}
+                      className="text-left text-xs font-medium text-foreground hover:bg-primary/10 px-3 py-2 rounded-xl transition-all flex items-center gap-2 cursor-pointer"
+                    >
+                      <User className="w-4 h-4 text-primary" />
+                      Ver Perfil
+                    </Link>
+                    <Link
+                      href={user.role?.toUpperCase() === 'ADMIN' ? '/admin' : '/dashboard?edit=true'}
+                      onClick={() => setDropdownOpen(false)}
+                      className="text-left text-xs font-medium text-foreground hover:bg-primary/10 px-3 py-2 rounded-xl transition-all flex items-center gap-2 cursor-pointer"
+                    >
+                      <Edit className="w-4 h-4 text-primary" />
+                      Editar Perfil
+                    </Link>
+                    <div className="h-px bg-border my-1" />
+                    <button
+                      onClick={() => {
+                        setDropdownOpen(false)
+                        localStorage.removeItem('banda_token')
+                        localStorage.removeItem('banda_user')
+                        setUser(null)
+                        toast.success('Desconectado com sucesso.')
+                        window.location.reload()
+                      }}
+                      className="w-full text-left text-xs font-semibold text-rose-400 hover:bg-rose-500/10 px-3 py-2 rounded-xl transition-all flex items-center gap-2 cursor-pointer border-0"
+                    >
+                      <LogOut className="w-4 h-4" />
+                      Sair
+                    </button>
+                  </div>
+                )}
               </div>
             ) : (
               <Link

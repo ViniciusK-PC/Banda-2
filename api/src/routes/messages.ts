@@ -102,8 +102,8 @@ router.get('/my-tickets', authenticateToken, async (req: any, res: any) => {
   }
 });
 
-// GET /api/messages/:id - Get single ticket details with replies (Public)
-router.get('/:id', async (req: any, res: any) => {
+// GET /api/messages/:id - Get single ticket details with replies (Protected, requires ownership or admin)
+router.get('/:id', authenticateToken, async (req: any, res: any) => {
   try {
     const { id } = req.params;
     const message = await Message.findById(id);
@@ -112,14 +112,24 @@ router.get('/:id', async (req: any, res: any) => {
       return res.status(404).json({ message: 'Ticket não encontrado' });
     }
 
+    const loggedInUser = await User.findById(req.user.id);
+    if (!loggedInUser) {
+      return res.status(404).json({ message: 'Usuário não encontrado' });
+    }
+
+    // Verify ownership: must be owner or admin
+    if (loggedInUser.role?.toUpperCase() !== 'ADMIN' && message.email !== loggedInUser.email) {
+      return res.status(403).json({ message: 'Acesso negado. Este chamado pertence a outra conta.' });
+    }
+
     res.json(message);
   } catch (error: any) {
     res.status(500).json({ message: 'Erro ao buscar ticket', error: error.message });
   }
 });
 
-// POST /api/messages/:id/replies - Add a reply (soft authenticated, Admin or User)
-router.post('/:id/replies', async (req: any, res: any) => {
+// POST /api/messages/:id/replies - Add a reply (Protected, requires ownership or admin)
+router.post('/:id/replies', authenticateToken, async (req: any, res: any) => {
   try {
     const { id } = req.params;
     const { message: replyMessage } = req.body;
@@ -128,26 +138,22 @@ router.post('/:id/replies', async (req: any, res: any) => {
       return res.status(400).json({ message: 'Conteúdo da resposta é obrigatório' });
     }
 
-    // Soft authenticate token
-    let sender: 'admin' | 'user' = 'user';
-    const authHeader = req.headers['authorization'];
-    const token = authHeader && authHeader.split(' ')[1];
-
-    if (token) {
-      try {
-        const decoded: any = jwt.verify(token, JWT_SECRET);
-        if (decoded && (decoded.role === 'ADMIN' || decoded.role === 'admin')) {
-          sender = 'admin';
-        }
-      } catch (err) {
-        // Token invalid, ignore and treat as standard user
-      }
-    }
-
     const ticket = await Message.findById(id);
     if (!ticket) {
       return res.status(404).json({ message: 'Ticket não encontrado' });
     }
+
+    const loggedInUser = await User.findById(req.user.id);
+    if (!loggedInUser) {
+      return res.status(404).json({ message: 'Usuário não encontrado' });
+    }
+
+    // Verify ownership: must be owner or admin
+    if (loggedInUser.role?.toUpperCase() !== 'ADMIN' && ticket.email !== loggedInUser.email) {
+      return res.status(403).json({ message: 'Acesso negado. Este chamado pertence a outra conta.' });
+    }
+
+    const sender = loggedInUser.role?.toUpperCase() === 'ADMIN' ? 'admin' : 'user';
 
     // Add reply
     ticket.replies.push({
