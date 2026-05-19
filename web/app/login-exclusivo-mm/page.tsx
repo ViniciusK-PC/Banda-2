@@ -41,7 +41,7 @@ export default function AdminLoginPage() {
       localStorage.setItem('banda_user', JSON.stringify(data.user))
       
       toast.success(`Bem-vindo ao Painel, ${data.user.name}!`)
-      router.push('/admin')
+      router.push('/painel-exclusivo-mm')
     } catch (err: any) {
       console.error(err)
       toast.error(err.message || 'Credenciais administrativas inválidas. Tente novamente.')

@@ -126,7 +126,7 @@ export default function AdminPage() {
       const storedUser = localStorage.getItem('banda_user')
       if (!token || !storedUser) {
         toast.error('Acesso restrito. Faça login primeiro.')
-        router.push('/admin-login')
+        router.push('/login-exclusivo-mm')
       } else {
         const parsedUser = JSON.parse(storedUser)
         if (parsedUser.role?.toUpperCase() !== 'ADMIN') {

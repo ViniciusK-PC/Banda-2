@@ -44,7 +44,7 @@ export default function DashboardPage() {
       } else {
         const parsed = JSON.parse(storedUser)
         if (parsed.role === 'ADMIN') {
-          router.push('/admin') // Redirect admin users to their official dashboard
+          router.push('/painel-exclusivo-mm') // Redirect admin users to their official dashboard
         } else {
           setAuthorized(true)
           setUser(parsed)

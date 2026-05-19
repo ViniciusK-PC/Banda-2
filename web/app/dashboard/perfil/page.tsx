@@ -113,7 +113,7 @@ export default function ProfilePage() {
       
       // Delay redirect to allow user to see success
       setTimeout(() => {
-        router.push(res.user.role?.toUpperCase() === 'ADMIN' ? '/admin' : '/dashboard')
+        router.push(res.user.role?.toUpperCase() === 'ADMIN' ? '/painel-exclusivo-mm' : '/dashboard')
       }, 1000)
     } catch (err: any) {
       console.error(err)
@@ -166,7 +166,7 @@ export default function ProfilePage() {
         
         {/* Back Link */}
         <Link 
-          href={user.role === 'ADMIN' ? '/admin' : '/dashboard'}
+          href={user.role === 'ADMIN' ? '/painel-exclusivo-mm' : '/dashboard'}
           className="inline-flex items-center gap-2 text-xs font-bold text-muted-foreground hover:text-foreground mb-8 transition-colors"
         >
           <ArrowLeft className="w-4 h-4" />
@@ -310,7 +310,7 @@ export default function ProfilePage() {
               </Button>
 
               <Link 
-                href={user.role === 'ADMIN' ? '/admin' : '/dashboard'}
+                href={user.role === 'ADMIN' ? '/painel-exclusivo-mm' : '/dashboard'}
                 className="w-full inline-flex items-center justify-center text-xs text-muted-foreground hover:text-foreground transition-all cursor-pointer py-3 text-center"
               >
                 Cancelar

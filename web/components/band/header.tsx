@@ -113,7 +113,7 @@ export function BandHeader({ settings }: BandHeaderProps) {
                 {dropdownOpen && (
                   <div className="absolute right-0 mt-2 w-48 bg-background/95 backdrop-blur-md border border-border rounded-2xl p-2 shadow-2xl z-50 flex flex-col gap-1">
                     <Link
-                      href={user.role?.toUpperCase() === 'ADMIN' ? '/admin' : '/dashboard'}
+                      href={user.role?.toUpperCase() === 'ADMIN' ? '/painel-exclusivo-mm' : '/dashboard'}
                       onClick={() => setDropdownOpen(false)}
                       className="text-left text-xs font-medium text-foreground hover:bg-primary/10 px-3 py-2 rounded-xl transition-all flex items-center gap-2 cursor-pointer"
                     >
@@ -215,7 +215,7 @@ export function BandHeader({ settings }: BandHeaderProps) {
                   <div className="text-sm font-semibold text-foreground px-2">Olá, {user.name} 👋</div>
                   <div className="flex flex-wrap gap-2">
                     <Link
-                      href={user.role === 'ADMIN' ? '/admin' : '/dashboard'}
+                      href={user.role === 'ADMIN' ? '/painel-exclusivo-mm' : '/dashboard'}
                       onClick={() => setIsOpen(false)}
                       className="flex-1 text-center text-xs font-semibold text-foreground bg-primary/10 hover:bg-primary/20 border border-primary/30 hover:border-primary/50 px-3 py-2.5 rounded-xl transition-all cursor-pointer"
                     >
